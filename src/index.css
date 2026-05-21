@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+    --font-cinzel: 'Cinzel', serif;
+    --font-serif-kr: 'Noto Serif KR', serif;
+}
+
+/* ── 서풍의광시곡 테마 (기본) ── */
+:root,
+[data-theme="seopoong"] {
+    --card-bg: rgba(45, 30, 12, 0.65);
+    --card-border: rgba(201, 168, 76, 0.3);
+    --card-header-bg: rgba(35, 22, 8, 0.7);
+    --sidebar-bg: rgba(30, 18, 6, 0.55);
+    --input-bg: rgba(20, 12, 4, 0.7);
+    --text-primary: #F0E6CC;
+    --text-secondary: rgba(240, 230, 204, 0.55);
+    --text-muted: rgba(240, 230, 204, 0.3);
+    --accent: #C9A84C;
+    --accent-hover: rgba(201, 168, 76, 0.15);
+    --border: rgba(201, 168, 76, 0.3);
+    --border-hover: rgba(201, 168, 76, 0.6);
+    --bg-filter: brightness(0.6) saturate(0.8);
+    --overlay-gradient: linear-gradient(to bottom, rgba(14,10,6,0.1) 0%, rgba(14,10,6,0.3) 40%, rgba(14,10,6,0.6) 100%);
+}
+
+/* ── light 테마 ── */
+[data-theme="light"] {
+    --card-bg: rgba(10, 30, 70, 0.60);
+    --card-border: rgba(96, 200, 255, 0.4);
+    --card-header-bg: rgba(5, 18, 50, 0.65);
+    --sidebar-bg: rgba(5, 15, 45, 0.55);
+    --input-bg: rgba(5, 18, 50, 0.65);
+    --text-primary: #E0F4FF;
+    --text-secondary: rgba(224, 244, 255, 0.65);
+    --text-muted: rgba(224, 244, 255, 0.4);
+    --accent: #60C8FF;
+    --accent-hover: rgba(96, 200, 255, 0.15);
+    --border: rgba(96, 200, 255, 0.4);
+    --border-hover: rgba(96, 200, 255, 0.7);
+    --bg-filter: brightness(0.8) saturate(1.2);
+    --overlay-gradient: linear-gradient(to bottom, rgba(2,8,24,0.15) 0%, rgba(2,8,24,0.25) 40%, rgba(2,8,24,0.6) 100%);
+}
+
+/* ── 배경 이미지 (테마별) ── */
+.bg-theme {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+[data-theme="seopoong"] .bg-theme,
+.bg-theme {
+    background-image: url('/src/assets/bg-main.png');
+}
+
+[data-theme="light"] .bg-theme {
+    background-image: url('/src/assets/bg-light.png');
+}
+
+/* ── 유틸리티 클래스 ── */
+.theme-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(6px);
+}
+
+.theme-card-header {
+    background: var(--card-header-bg);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.theme-sidebar {
+    background: var(--sidebar-bg);
+    backdrop-filter: blur(4px);
+}
+
+.theme-input {
+    background: var(--input-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+}
+
+.theme-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(var(--accent), 0.1);
+}
+
+.theme-input::placeholder {
+    color: var(--text-muted);
+}
