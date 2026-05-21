@@ -1,308 +1,584 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import {
+    Section, Field, Input, Select, Textarea,
+    AddBtn, RemoveBtn, ItemBox, Grid, CancelBtn, SaveBtn
+} from '../../components/common/AdminComponents'
+import { useToast } from '../../components/common/Toast'
+import {
+    getEquipmentList, getEquipmentDetail, createEquipment, updateEquipment, deleteEquipment,
+    getWeaponList, getWeaponDetail, createWeapon, updateWeapon, deleteWeapon,
+    type EquipmentSummaryDto, type ExclusiveWeaponDto,
+    type EquipmentRequest, type ExclusiveWeaponRequest,
+    type EquipmentEffectRequest, type WeaponEffectRequest, type EffectLevelRequest
+} from '../../api/itemApi'
 
-import { Section, Field, Input, Select, Textarea, ItemBox, Grid,CancelBtn, DraftBtn, SaveBtn } from '../../components/common/AdminComponents'
+// ─── 상수 ──────────────────────────────────────────────────
 
-const Collapse = ({ title, children }: { title: string; children: React.ReactNode }) => {
-    const [open, setOpen] = useState(false)
-    return (
-        <div className="rounded border border-amber-900/15 overflow-hidden mb-3">
-            <button
-                onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-stone-900/40 text-xs font-semibold text-stone-400 hover:text-stone-200 transition"
-            >
-                <span>{title}</span>
-                <span className="text-stone-600">{open ? '▲' : '▼'}</span>
-            </button>
-            {open && <div className="p-4">{children}</div>}
-        </div>
-    )
+const EQUIPMENT_TYPES = [
+    { value: 'helmet', label: '투구' },
+    { value: 'armor', label: '갑옷' },
+    { value: 'gloves', label: '장갑' },
+    { value: 'boots', label: '신발' },
+    { value: 'accessory', label: '악세서리' },
+]
+const DEFENSE_TYPES = [
+    { value: 'light', label: '라이트' },
+    { value: 'medium', label: '미디엄' },
+    { value: 'heavy', label: '헤비' },
+]
+const GRADES = [
+    { value: 'rare', label: '희귀' },
+    { value: 'hero', label: '영웅' },
+    { value: 'legend', label: '전설' },
+]
+const BREAKTHROUGH_STEPS = [1, 2, 3, 4, 5, 6]
+const ARMOR_TYPES = ['helmet', 'armor', 'gloves', 'boots']
+
+// ─── 타입 ──────────────────────────────────────────────────
+
+interface EffectForm {
+    _key: number
+    effectName: string
+    effectType: string
+    baseEffect: string
+    iconUrl: string
+    levels: { [step: number]: string }
 }
 
-// 돌파 단계별 효과 입력 (1~6단)
-const BreakthroughLevels = ({ placeholder }: { placeholder: string }) => {
-    const levels = [1, 2, 3, 4, 5, 6]
-    return (
-        <div className="space-y-2">
-            {levels.map(level => (
-                <ItemBox key={level} className="bg-stone-900/20">
-                    <div className="mb-2">
-                        <span className={`rounded px-2 py-0.5 text-xs font-bold ${level <= 3 ? 'bg-blue-900/20 text-blue-400' : 'bg-amber-900/20 text-amber-500'}`}>
-                            돌파 {level}단
-                        </span>
-                    </div>
-                    <Field label="효과 설명">
-                        <Textarea rows={2} placeholder={`${level}단 ${placeholder}`} />
-                    </Field>
-                </ItemBox>
-            ))}
-        </div>
-    )
+interface EquipmentForm {
+    name: string
+    type: string
+    defenseType: string
+    grade: string
+    baseStats: string
+    extraStats: string
+    setName: string
+    setEffect2: string
+    setEffect4: string
+    description: string
+    iconUrl: string
+    effects: EffectForm[]
 }
 
-const ItemAdmin = () => {
-    const [itemType, setItemType] = useState<'weapon' | 'armor' | 'accessory'>('weapon')
-    const [isExclusive, setIsExclusive] = useState(false)
-    const [weaponEffectTab, setWeaponEffectTab] = useState<'normal' | 'exclusive'>('normal')
-    const [hasExclusiveEffect, setHasExclusiveEffect] = useState(false)
+interface WeaponForm {
+    name: string
+    weaponType: string
+    grade: string
+    baseStats: string
+    extraStats: string
+    description: string
+    iconUrl: string
+    effects: EffectForm[]
+}
+
+// ─── 기본값 ────────────────────────────────────────────────
+
+const emptyEffect = (): EffectForm => ({
+    _key: Date.now() + Math.random(),
+    effectName: '', effectType: 'normal',
+    baseEffect: '', iconUrl: '',
+    levels: { 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' }
+})
+
+const emptyEquipmentForm = (): EquipmentForm => ({
+    name: '', type: 'helmet', defenseType: 'light', grade: 'rare',
+    baseStats: '', extraStats: '',
+    setName: '', setEffect2: '', setEffect4: '',
+    description: '', iconUrl: '',
+    effects: [emptyEffect()]
+})
+
+const emptyWeaponForm = (): WeaponForm => ({
+    name: '', weaponType: '', grade: 'rare',
+    baseStats: '', extraStats: '',
+    description: '', iconUrl: '',
+    effects: [emptyEffect()]
+})
+
+// ─── 헬퍼 ──────────────────────────────────────────────────
+
+const toStr = (v: string) => v.trim() === '' ? null : v.trim()
+
+const effectFormToRequest = (e: EffectForm): EquipmentEffectRequest | WeaponEffectRequest => ({
+    effectName: e.effectName,
+    effectType: e.effectType,
+    baseEffect: toStr(e.baseEffect),
+    iconUrl: toStr(e.iconUrl),
+    levels: BREAKTHROUGH_STEPS
+        .filter(s => e.levels[s]?.trim())
+        .map((s): EffectLevelRequest => ({ breakthroughStep: s, effectText: e.levels[s] }))
+})
+
+const effectDtoToForm = (e: { effectName: string; effectType: string; baseEffect: string | null; iconUrl: string | null; levels: { breakthroughStep: number; effectText: string | null }[] }): EffectForm => ({
+    _key: Date.now() + Math.random(),
+    effectName: e.effectName,
+    effectType: e.effectType,
+    baseEffect: e.baseEffect ?? '',
+    iconUrl: e.iconUrl ?? '',
+    levels: Object.fromEntries(
+        BREAKTHROUGH_STEPS.map(s => [s, e.levels.find(l => l.breakthroughStep === s)?.effectText ?? ''])
+    )
+})
+
+// ─── 서브 컴포넌트 ─────────────────────────────────────────
+
+const EffectSection = ({
+                           effects, onChange
+                       }: {
+    effects: EffectForm[]
+    onChange: (effects: EffectForm[]) => void
+}) => {
+    const update = (key: number, field: keyof EffectForm, val: string) =>
+        onChange(effects.map(e => e._key === key ? { ...e, [field]: val } : e))
+
+    const updateLevel = (key: number, step: number, val: string) =>
+        onChange(effects.map(e => e._key === key ? { ...e, levels: { ...e.levels, [step]: val } } : e))
 
     return (
-        <main className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
-            {/* 헤더 */}
-            <div className="mb-6 flex items-center justify-between">
-                <div>
-                    <h1 className="font-cinzel text-lg tracking-widest text-amber-400">아이템 등록 / 수정</h1>
-                    <p className="mt-0.5 text-xs text-stone-600">* 필수 입력</p>
-                </div>
-                <div className="flex gap-2">
-                    <CancelBtn />
-                    <DraftBtn />
-                    <SaveBtn />
-                </div>
-            </div>
-
-            {/* 아이템 타입 탭 */}
-            <div className="mb-5 flex gap-1 border-b border-amber-900/20">
-                {([['weapon', '무기'], ['armor', '방어구'], ['accessory', '악세사리']] as const).map(([type, label]) => (
-                    <button
-                        key={type}
-                        onClick={() => setItemType(type)}
-                        className={`px-6 py-2.5 font-cinzel text-xs tracking-wider transition border-b-2 -mb-px ${
-                            itemType === type ? 'border-amber-500 text-amber-400' : 'border-transparent text-stone-500 hover:text-stone-300'
-                        }`}
-                    >
-                        {label}
-                    </button>
-                ))}
-            </div>
-
-            {/* ① 기본 정보 */}
-            <Section title="① 기본 정보">
-                <Grid cols={2}>
-                    <Field label="아이템 이름" required><Input placeholder="예: 라 사바호" /></Field>
-                    <Field label="아이템 ID (URL용)"><Input placeholder="예: la-sabaho" /></Field>
-                </Grid>
-                <div className="mt-3">
-                    <Grid cols={3}>
-                        <Field label="등급" required>
-                            <Select>
-                                <option>일반</option><option>희귀</option><option>영웅</option><option>전설</option>
-                            </Select>
-                        </Field>
-                        {itemType === 'weapon' && (
-                            <Field label="무기 타입" required>
-                                <Input placeholder="예: 쌍수단검/관통" />
-                            </Field>
-                        )}
-                        {itemType === 'armor' && (
-                            <Field label="부위" required>
-                                <Select>
-                                    <option>투구</option><option>갑옷</option><option>장갑</option><option>신발</option>
-                                </Select>
-                            </Field>
-                        )}
-                        {itemType === 'armor' && (
-                            <Field label="방어 타입">
-                                <Select>
-                                    <option>라이트</option><option>미디엄</option><option>헤비</option>
-                                </Select>
-                            </Field>
-                        )}
-                        {itemType === 'accessory' && (
-                            <Field label="부위" required>
-                                <Select>
-                                    <option>목걸이</option><option>반지</option><option>귀걸이</option>
-                                </Select>
-                            </Field>
-                        )}
-                    </Grid>
-                </div>
-
-                {/* 무기 전용 여부 */}
-                {itemType === 'weapon' && (
-                    <div className="mt-3">
-                        <div className="flex items-center gap-3 mb-3">
-                            <label className="text-xs font-semibold text-stone-400">캐릭터 전용 무기</label>
-                            <button
-                                onClick={() => setIsExclusive(!isExclusive)}
-                                className={`rounded px-3 py-1 text-xs transition ${isExclusive ? 'bg-amber-900/40 text-amber-400' : 'bg-stone-800 text-stone-500 hover:text-stone-300'}`}
+        <div className="space-y-4">
+            {effects.map((effect, idx) => (
+                <ItemBox key={effect._key}>
+                    <div className="mb-3 flex items-center justify-between">
+                        <span className="text-xs font-bold text-[var(--accent)]">효과 {idx + 1}</span>
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={effect.effectType}
+                                onChange={e => update(effect._key, 'effectType', e.target.value)}
+                                style={{ width: 90 }}
                             >
-                                {isExclusive ? '전용' : '일반'}
-                            </button>
+                                <option value="normal">일반</option>
+                                <option value="exclusive">전용</option>
+                            </Select>
+                            <RemoveBtn onClick={() => onChange(effects.filter(e => e._key !== effect._key))} />
                         </div>
-                        {isExclusive && (
-                            <div className="flex gap-2">
-                                <Input placeholder="캐릭터 이름으로 검색..." className="max-w-xs" />
-                                <button className="rounded border border-amber-900/30 px-4 py-2 text-xs text-amber-600 transition hover:border-amber-600">검색</button>
-                            </div>
-                        )}
                     </div>
-                )}
-
-                <div className="mt-3">
                     <Grid cols={2}>
-                        <Field label="아이콘 URL"><Input placeholder="https://..." /></Field>
-                        <div />
-                    </Grid>
-                </div>
-                <div className="mt-3">
-                    <Field label="아이템 설명">
-                        <Textarea rows={3} placeholder="아이템 배경 설명..." />
-                    </Field>
-                </div>
-            </Section>
-
-            {/* ② 기본 스탯 / 추가 능력치 (접기) */}
-            <div className="mb-5 overflow-hidden rounded border border-amber-900/25 bg-stone-950/40 backdrop-blur-sm">
-                <div className="flex items-center gap-2 border-b border-amber-900/25 bg-stone-950/30 px-5 py-3">
-                    <div className="h-3.5 w-0.5 rounded bg-[var(--accent)]" />
-                    <span className="font-cinzel text-xs tracking-[0.15em] text-[var(--accent)] uppercase">② 기본 스탯</span>
-                </div>
-                <div className="p-5">
-                    <Collapse title="기본 스탯 입력">
-                        <Grid cols={3}>
-                            <Field label="최대 체력"><Input type="number" placeholder="0" /></Field>
-                            <Field label="공격력"><Input type="number" placeholder="0" /></Field>
-                            <Field label="방어력"><Input type="number" placeholder="0" /></Field>
-                            <Field label="저항력"><Input type="number" placeholder="0" /></Field>
-                            <Field label="주문력"><Input type="number" placeholder="0" /></Field>
-                            <Field label="치명타율 (%)"><Input type="number" placeholder="0" /></Field>
-                        </Grid>
-                    </Collapse>
-                    <Collapse title="추가 능력치 입력">
-                        <Field label="추가 능력치 설명">
-                            <Textarea rows={3} placeholder="예: 물리 관통 +14% 최대 체력 +9%&#10;[수치]{red} 태그 사용 가능" />
+                        <Field label="효과 이름" required>
+                            <Input value={effect.effectName} onChange={e => update(effect._key, 'effectName', e.target.value)} placeholder="예: 새벽의 빛" />
                         </Field>
-                    </Collapse>
-                </div>
-            </div>
-
-            {/* ③ 무기 효과 (무기만) */}
-            {itemType === 'weapon' && (
-                <Section title="③ 무기 효과">
-                    {/* 일반/전용 토글 */}
-                    <div className="mb-4 flex items-center gap-3">
-                        <div className="flex gap-1 border-b border-amber-900/20 flex-1">
-                            {(['normal', 'exclusive'] as const).map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setWeaponEffectTab(tab)}
-                                    className={`px-5 py-2 font-cinzel text-xs tracking-wider transition border-b-2 -mb-px ${
-                                        weaponEffectTab === tab ? 'border-amber-500 text-amber-400' : 'border-transparent text-stone-500 hover:text-stone-300'
-                                    }`}
-                                >
-                                    {tab === 'normal' ? '일반 효과' : '전용 효과'}
-                                </button>
+                        <Field label="아이콘 URL">
+                            <Input value={effect.iconUrl} onChange={e => update(effect._key, 'iconUrl', e.target.value)} placeholder="https://..." />
+                        </Field>
+                    </Grid>
+                    <div className="mt-3">
+                        <Field label="기본 효과 설명">
+                            <Textarea rows={2} value={effect.baseEffect} onChange={e => update(effect._key, 'baseEffect', e.target.value)} placeholder="기본 효과 설명..." />
+                        </Field>
+                    </div>
+                    <div className="mt-3">
+                        <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">돌파 단계별 효과</div>
+                        <div className="space-y-2">
+                            {BREAKTHROUGH_STEPS.map(step => (
+                                <div key={step} className="flex items-start gap-3">
+                                    <span className={`mt-2 shrink-0 rounded px-2 py-0.5 text-xs font-bold ${step <= 3 ? 'bg-blue-900/20 text-blue-400' : 'bg-amber-900/20 text-amber-500'}`}>
+                                        {step}단
+                                    </span>
+                                    <Textarea
+                                        rows={1}
+                                        value={effect.levels[step]}
+                                        onChange={e => updateLevel(effect._key, step, e.target.value)}
+                                        placeholder={`${step}단 효과... [수치]{red} 태그 가능`}
+                                    />
+                                </div>
                             ))}
                         </div>
-                        {weaponEffectTab === 'exclusive' && (
+                    </div>
+                </ItemBox>
+            ))}
+            <AddBtn onClick={() => onChange([...effects, emptyEffect()])} label="효과 추가" />
+        </div>
+    )
+}
+
+// ─── 메인 컴포넌트 ─────────────────────────────────────────
+
+const ItemAdmin = () => {
+    const { show, ToastContainer } = useToast()
+
+    // 탭: weapon | equipment
+    const [tab, setTab] = useState<'weapon' | 'equipment'>('weapon')
+
+    // 목록
+    const [weaponList, setWeaponList] = useState<ExclusiveWeaponDto[]>([])
+    const [equipmentList, setEquipmentList] = useState<EquipmentSummaryDto[]>([])
+
+    // 편집
+    const [editingId, setEditingId] = useState<number | null>(null)
+    const [weaponForm, setWeaponForm] = useState<WeaponForm>(emptyWeaponForm())
+    const [equipmentForm, setEquipmentForm] = useState<EquipmentForm>(emptyEquipmentForm())
+    const [loading, setLoading] = useState(false)
+
+    const loadLists = () => {
+        getWeaponList().then(setWeaponList).catch(() => show('전용무기 목록 로드 실패', 'error'))
+        getEquipmentList().then(setEquipmentList).catch(() => show('장비 목록 로드 실패', 'error'))
+    }
+
+    useEffect(() => { loadLists() }, [])
+
+    const handleNew = () => {
+        setEditingId(null)
+        setWeaponForm(emptyWeaponForm())
+        setEquipmentForm(emptyEquipmentForm())
+    }
+
+    const handleTabChange = (t: 'weapon' | 'equipment') => {
+        setTab(t)
+        handleNew()
+    }
+
+    // 전용무기 수정 클릭
+    const handleEditWeapon = async (id: number) => {
+        try {
+            const d = await getWeaponDetail(id)
+            setWeaponForm({
+                name: d.name,
+                weaponType: d.weaponType ?? '',
+                grade: d.grade,
+                baseStats: d.baseStats ?? '',
+                extraStats: d.extraStats ?? '',
+                description: d.description ?? '',
+                iconUrl: d.iconUrl ?? '',
+                effects: d.effects.map(effectDtoToForm)
+            })
+            setEditingId(id)
+        } catch { show('불러오기 실패', 'error') }
+    }
+
+    // 장비 수정 클릭
+    const handleEditEquipment = async (id: number) => {
+        try {
+            const d = await getEquipmentDetail(id)
+            setEquipmentForm({
+                name: d.name,
+                type: d.type,
+                defenseType: d.defenseType ?? 'light',
+                grade: d.grade,
+                baseStats: d.baseStats ?? '',
+                extraStats: d.extraStats ?? '',
+                setName: d.setName ?? '',
+                setEffect2: d.setEffect2 ?? '',
+                setEffect4: d.setEffect4 ?? '',
+                description: d.description ?? '',
+                iconUrl: d.iconUrl ?? '',
+                effects: d.effects.map(effectDtoToForm)
+            })
+            setEditingId(id)
+        } catch { show('불러오기 실패', 'error') }
+    }
+
+    // 삭제
+    const handleDeleteWeapon = async (id: number, name: string) => {
+        if (!confirm(`"${name}" 전용무기를 삭제할까요?`)) return
+        try {
+            await deleteWeapon(id)
+            show('삭제 완료')
+            loadLists()
+            if (editingId === id) handleNew()
+        } catch { show('삭제 실패', 'error') }
+    }
+
+    const handleDeleteEquipment = async (id: number, name: string) => {
+        if (!confirm(`"${name}" 장비를 삭제할까요?`)) return
+        try {
+            await deleteEquipment(id)
+            show('삭제 완료')
+            loadLists()
+            if (editingId === id) handleNew()
+        } catch { show('삭제 실패', 'error') }
+    }
+
+    // 저장
+    const handleSaveWeapon = async () => {
+        if (!weaponForm.name.trim()) { show('무기 이름을 입력해주세요', 'error'); return }
+        setLoading(true)
+        try {
+            const req: ExclusiveWeaponRequest = {
+                name: weaponForm.name,
+                weaponType: toStr(weaponForm.weaponType),
+                grade: weaponForm.grade,
+                baseStats: toStr(weaponForm.baseStats),
+                extraStats: toStr(weaponForm.extraStats),
+                description: toStr(weaponForm.description),
+                iconUrl: toStr(weaponForm.iconUrl),
+                effects: weaponForm.effects.map(effectFormToRequest) as WeaponEffectRequest[]
+            }
+            if (editingId !== null) {
+                await updateWeapon(editingId, req)
+                show('수정 완료!')
+            } else {
+                await createWeapon(req)
+                show('등록 완료!')
+                handleNew()
+            }
+            loadLists()
+        } catch { show('저장 실패', 'error') }
+        finally { setLoading(false) }
+    }
+
+    const handleSaveEquipment = async () => {
+        if (!equipmentForm.name.trim()) { show('아이템 이름을 입력해주세요', 'error'); return }
+        setLoading(true)
+        try {
+            const isArmor = ARMOR_TYPES.includes(equipmentForm.type)
+            const req: EquipmentRequest = {
+                name: equipmentForm.name,
+                type: equipmentForm.type,
+                defenseType: isArmor ? toStr(equipmentForm.defenseType) : null,
+                grade: equipmentForm.grade,
+                baseStats: toStr(equipmentForm.baseStats),
+                extraStats: toStr(equipmentForm.extraStats),
+                setName: toStr(equipmentForm.setName),
+                setEffect2: toStr(equipmentForm.setEffect2),
+                setEffect4: toStr(equipmentForm.setEffect4),
+                description: toStr(equipmentForm.description),
+                iconUrl: toStr(equipmentForm.iconUrl),
+                effects: equipmentForm.effects.map(effectFormToRequest) as EquipmentEffectRequest[]
+            }
+            if (editingId !== null) {
+                await updateEquipment(editingId, req)
+                show('수정 완료!')
+            } else {
+                await createEquipment(req)
+                show('등록 완료!')
+                handleNew()
+            }
+            loadLists()
+        } catch { show('저장 실패', 'error') }
+        finally { setLoading(false) }
+    }
+
+    const setW = (k: keyof WeaponForm, v: string) => setWeaponForm(f => ({ ...f, [k]: v }))
+    const setE = (k: keyof EquipmentForm, v: string) => setEquipmentForm(f => ({ ...f, [k]: v }))
+    const isArmor = ARMOR_TYPES.includes(equipmentForm.type)
+
+    return (
+        <div className="flex min-w-0 flex-1 gap-0 overflow-hidden">
+            <ToastContainer />
+
+            {/* 좌측 목록 */}
+            <aside className="flex w-56 flex-col border-r border-[var(--card-border)] bg-black/20">
+                {/* 탭 */}
+                <div className="flex border-b border-[var(--card-border)]">
+                    {(['weapon', 'equipment'] as const).map(t => (
+                        <button
+                            key={t}
+                            onClick={() => handleTabChange(t)}
+                            className={`flex-1 py-2.5 text-xs font-cinzel tracking-wider transition ${tab === t ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
+                        >
+                            {t === 'weapon' ? '전용무기' : '장비'}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--card-border)]">
+                    <span className="text-xs text-[var(--text-muted)]">
+                        {tab === 'weapon' ? weaponList.length : equipmentList.length}개
+                    </span>
+                    <button
+                        onClick={handleNew}
+                        className="rounded bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--accent)]/20 transition"
+                    >
+                        + 신규
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto py-1">
+                    {tab === 'weapon' && weaponList.map(w => (
+                        <div
+                            key={w.weaponId}
+                            onClick={() => handleEditWeapon(w.weaponId)}
+                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-white/5 ${editingId === w.weaponId ? 'bg-[var(--accent)]/10' : ''}`}
+                        >
+                            <div>
+                                <div className={`text-sm font-medium ${editingId === w.weaponId ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{w.name}</div>
+                                <div className="text-xs text-[var(--text-muted)]">{w.weaponType ?? '-'} · {w.grade}</div>
+                            </div>
                             <button
-                                onClick={() => setHasExclusiveEffect(!hasExclusiveEffect)}
-                                className={`rounded px-3 py-1 text-xs transition flex-shrink-0 ${hasExclusiveEffect ? 'bg-amber-900/40 text-amber-400' : 'bg-stone-800 text-stone-500 hover:text-stone-300'}`}
-                            >
-                                {hasExclusiveEffect ? '사용 중' : '사용 안 함'}
-                            </button>
-                        )}
-                    </div>
+                                onClick={e => { e.stopPropagation(); handleDeleteWeapon(w.weaponId, w.name) }}
+                                className="hidden rounded px-1.5 py-0.5 text-xs text-[var(--text-muted)] hover:bg-red-900/30 hover:text-red-400 group-hover:block"
+                            >삭제</button>
+                        </div>
+                    ))}
+                    {tab === 'equipment' && equipmentList.map(eq => (
+                        <div
+                            key={eq.equipmentId}
+                            onClick={() => handleEditEquipment(eq.equipmentId)}
+                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-white/5 ${editingId === eq.equipmentId ? 'bg-[var(--accent)]/10' : ''}`}
+                        >
+                            <div>
+                                <div className={`text-sm font-medium ${editingId === eq.equipmentId ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{eq.name}</div>
+                                <div className="text-xs text-[var(--text-muted)]">{eq.type} · {eq.grade}</div>
+                            </div>
+                            <button
+                                onClick={e => { e.stopPropagation(); handleDeleteEquipment(eq.equipmentId, eq.name) }}
+                                className="hidden rounded px-1.5 py-0.5 text-xs text-[var(--text-muted)] hover:bg-red-900/30 hover:text-red-400 group-hover:block"
+                            >삭제</button>
+                        </div>
+                    ))}
+                    {((tab === 'weapon' && weaponList.length === 0) || (tab === 'equipment' && equipmentList.length === 0)) && (
+                        <p className="px-4 py-3 text-xs text-[var(--text-muted)]">등록된 항목 없음</p>
+                    )}
+                </div>
+            </aside>
 
-                    {/* 일반 효과 */}
-                    {weaponEffectTab === 'normal' && (
-                        <div>
-                            <div className="mb-4">
-                                <Grid cols={2}>
-                                    <Field label="스킬 이름"><Input placeholder="예: 새벽의 빛" /></Field>
-                                    <Field label="스킬 아이콘 URL"><Input placeholder="https://..." /></Field>
-                                </Grid>
-                                <div className="mt-3">
-                                    <Field label="기본 효과 설명">
-                                        <Textarea rows={2} placeholder="스킬 기본 설명..." />
+            {/* 우측 편집 패널 */}
+            <main className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 className="font-cinzel text-lg tracking-widest text-amber-400">
+                            {tab === 'weapon' ? '전용무기' : '장비'} {editingId !== null ? '수정' : '등록'}
+                        </h1>
+                        <p className="mt-0.5 text-xs text-stone-600">
+                            {editingId !== null ? `ID: ${editingId}` : '* 필수 입력'}
+                        </p>
+                    </div>
+                    <div className="flex gap-2">
+                        <CancelBtn onClick={handleNew} />
+                        <SaveBtn
+                            label={loading ? '저장 중...' : editingId !== null ? '수정 저장' : '저장 및 게시'}
+                            onClick={tab === 'weapon' ? handleSaveWeapon : handleSaveEquipment}
+                        />
+                    </div>
+                </div>
+
+                {/* ── 전용무기 폼 ── */}
+                {tab === 'weapon' && (
+                    <>
+                        <Section title="① 기본 정보">
+                            <Grid cols={3}>
+                                <Field label="무기 이름" required>
+                                    <Input value={weaponForm.name} onChange={e => setW('name', e.target.value)} placeholder="예: 라 사바호" />
+                                </Field>
+                                <Field label="무기 타입">
+                                    <Input value={weaponForm.weaponType} onChange={e => setW('weaponType', e.target.value)} placeholder="예: 쌍수단검" />
+                                </Field>
+                                <Field label="등급" required>
+                                    <Select value={weaponForm.grade} onChange={e => setW('grade', e.target.value)}>
+                                        {GRADES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+                                    </Select>
+                                </Field>
+                            </Grid>
+                            <div className="mt-3">
+                                <Field label="아이콘 URL">
+                                    <Input value={weaponForm.iconUrl} onChange={e => setW('iconUrl', e.target.value)} placeholder="https://..." />
+                                </Field>
+                            </div>
+                            <div className="mt-3">
+                                <Field label="설명">
+                                    <Textarea rows={2} value={weaponForm.description} onChange={e => setW('description', e.target.value)} placeholder="무기 배경 설명..." />
+                                </Field>
+                            </div>
+                        </Section>
+
+                        <Section title="② 스탯">
+                            <Field label="기본 스탯 (JSON)">
+                                <Textarea rows={2} value={weaponForm.baseStats} onChange={e => setW('baseStats', e.target.value)} placeholder='{"atk": 1234, "hp": 5678}' />
+                            </Field>
+                            <div className="mt-3">
+                                <Field label="추가 능력치 설명">
+                                    <Textarea rows={2} value={weaponForm.extraStats} onChange={e => setW('extraStats', e.target.value)} placeholder="예: 물리 관통 +14%" />
+                                </Field>
+                            </div>
+                        </Section>
+
+                        <Section title="③ 무기 효과">
+                            <EffectSection effects={weaponForm.effects} onChange={effects => setWeaponForm(f => ({ ...f, effects }))} />
+                        </Section>
+                    </>
+                )}
+
+                {/* ── 장비 폼 ── */}
+                {tab === 'equipment' && (
+                    <>
+                        <Section title="① 기본 정보">
+                            <Grid cols={2}>
+                                <Field label="아이템 이름" required>
+                                    <Input value={equipmentForm.name} onChange={e => setE('name', e.target.value)} placeholder="예: 회색의 계승자 갑옷" />
+                                </Field>
+                                <Field label="등급" required>
+                                    <Select value={equipmentForm.grade} onChange={e => setE('grade', e.target.value)}>
+                                        {GRADES.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+                                    </Select>
+                                </Field>
+                            </Grid>
+                            <div className="mt-3">
+                                <Grid cols={isArmor ? 2 : 1}>
+                                    <Field label="부위" required>
+                                        <Select value={equipmentForm.type} onChange={e => setE('type', e.target.value)}>
+                                            {EQUIPMENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                        </Select>
                                     </Field>
-                                </div>
-                            </div>
-                            <div className="text-xs font-semibold text-stone-500 mb-2">돌파 단계별 효과</div>
-                            <BreakthroughLevels placeholder="일반 효과..." />
-                        </div>
-                    )}
-
-                    {/* 전용 효과 */}
-                    {weaponEffectTab === 'exclusive' && hasExclusiveEffect && (
-                        <div>
-                            <div className="mb-4">
-                                <Grid cols={2}>
-                                    <Field label="스킬 이름"><Input placeholder="예: 고고한 에투알" /></Field>
-                                    <Field label="스킬 아이콘 URL"><Input placeholder="https://..." /></Field>
+                                    {isArmor && (
+                                        <Field label="방어 타입">
+                                            <Select value={equipmentForm.defenseType} onChange={e => setE('defenseType', e.target.value)}>
+                                                {DEFENSE_TYPES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                                            </Select>
+                                        </Field>
+                                    )}
                                 </Grid>
-                                <div className="mt-3">
-                                    <Field label="기본 효과 설명">
-                                        <Textarea rows={2} placeholder="전용 스킬 기본 설명..." />
+                            </div>
+                            <div className="mt-3">
+                                <Field label="아이콘 URL">
+                                    <Input value={equipmentForm.iconUrl} onChange={e => setE('iconUrl', e.target.value)} placeholder="https://..." />
+                                </Field>
+                            </div>
+                            <div className="mt-3">
+                                <Field label="설명">
+                                    <Textarea rows={2} value={equipmentForm.description} onChange={e => setE('description', e.target.value)} placeholder="아이템 배경 설명..." />
+                                </Field>
+                            </div>
+                        </Section>
+
+                        <Section title="② 스탯">
+                            <Field label="기본 스탯 (JSON)">
+                                <Textarea rows={2} value={equipmentForm.baseStats} onChange={e => setE('baseStats', e.target.value)} placeholder='{"atk": 1234, "hp": 5678}' />
+                            </Field>
+                            <div className="mt-3">
+                                <Field label="추가 능력치 설명">
+                                    <Textarea rows={2} value={equipmentForm.extraStats} onChange={e => setE('extraStats', e.target.value)} placeholder="예: 물리 관통 +14%" />
+                                </Field>
+                            </div>
+                        </Section>
+
+                        <Section title="③ 세트 효과">
+                            <Field label="세트 이름">
+                                <Input value={equipmentForm.setName} onChange={e => setE('setName', e.target.value)} placeholder="예: 회색의 계승자" />
+                            </Field>
+                            <div className="mt-3 space-y-3">
+                                <ItemBox>
+                                    <div className="mb-2">
+                                        <span className="rounded bg-blue-900/20 px-2 py-0.5 text-xs font-bold text-blue-500">2세트 효과</span>
+                                    </div>
+                                    <Field label="효과 설명">
+                                        <Textarea rows={2} value={equipmentForm.setEffect2} onChange={e => setE('setEffect2', e.target.value)} placeholder="2세트 효과..." />
                                     </Field>
-                                </div>
+                                </ItemBox>
+                                <ItemBox>
+                                    <div className="mb-2">
+                                        <span className="rounded bg-purple-900/20 px-2 py-0.5 text-xs font-bold text-purple-400">4세트 효과</span>
+                                    </div>
+                                    <Field label="효과 설명">
+                                        <Textarea rows={2} value={equipmentForm.setEffect4} onChange={e => setE('setEffect4', e.target.value)} placeholder="4세트 효과..." />
+                                    </Field>
+                                </ItemBox>
                             </div>
-                            <div className="text-xs font-semibold text-stone-500 mb-2">돌파 단계별 효과</div>
-                            <BreakthroughLevels placeholder="전용 효과..." />
-                        </div>
-                    )}
+                        </Section>
 
-                    {weaponEffectTab === 'exclusive' && !hasExclusiveEffect && (
-                        <div className="py-8 text-center text-sm text-stone-700">
-                            전용 효과 없음 (위 토글로 활성화)
-                        </div>
-                    )}
-                </Section>
-            )}
+                        <Section title="④ 아이템 효과">
+                            <EffectSection effects={equipmentForm.effects} onChange={effects => setEquipmentForm(f => ({ ...f, effects }))} />
+                        </Section>
+                    </>
+                )}
 
-            {/* ③ 세트 효과 (방어구만) */}
-            {itemType === 'armor' && (
-                <Section title="③ 세트 효과">
-                    <div className="mb-3">
-                        <Field label="세트 이름"><Input placeholder="예: 회색의 계승자" /></Field>
-                    </div>
-                    <div className="space-y-3">
-                        <ItemBox>
-                            <div className="mb-2">
-                                <span className="rounded bg-blue-900/20 px-2 py-0.5 text-xs font-bold text-blue-500">2세트 효과</span>
-                            </div>
-                            <Field label="효과 설명">
-                                <Textarea rows={2} placeholder="예: 최대 체력 +15%, 받는 치명타 피해 감소 +15%" />
-                            </Field>
-                        </ItemBox>
-                        <ItemBox>
-                            <div className="mb-2">
-                                <span className="rounded bg-purple-900/20 px-2 py-0.5 text-xs font-bold text-purple-400">4세트 효과</span>
-                            </div>
-                            <Field label="효과 설명">
-                                <Textarea rows={3} placeholder="예: 공격력/물리 관통 +20%. 2칸 이내 아군 플레이어가 없고..." />
-                            </Field>
-                        </ItemBox>
-                    </div>
-                </Section>
-            )}
-
-            {/* ③ 악세 효과 (악세사리만) */}
-            {itemType === 'accessory' && (
-                <Section title="③ 악세사리 효과">
-                    <div className="mb-4">
-                        <Grid cols={2}>
-                            <Field label="스킬 이름"><Input placeholder="스킬 이름" /></Field>
-                            <Field label="스킬 아이콘 URL"><Input placeholder="https://..." /></Field>
-                        </Grid>
-                        <div className="mt-3">
-                            <Field label="기본 효과 설명">
-                                <Textarea rows={2} placeholder="스킬 기본 설명..." />
-                            </Field>
-                        </div>
-                    </div>
-                    <div className="text-xs font-semibold text-stone-500 mb-2">돌파 단계별 효과</div>
-                    <BreakthroughLevels placeholder="악세사리 효과..." />
-                </Section>
-            )}
-
-            {/* 하단 버튼 */}
-            <div className="mb-8 flex justify-end gap-2">
-                <button className="rounded border border-stone-700 px-5 py-2 text-sm text-stone-400 transition hover:bg-stone-800">취소</button>
-                <button className="rounded border border-stone-600 bg-stone-800/60 px-5 py-2 text-sm text-stone-300 transition hover:bg-stone-700">임시저장</button>
-                <button className="rounded border border-amber-700/50 bg-amber-900/20 px-5 py-2 text-sm text-amber-400 transition hover:bg-amber-900/30">저장 및 게시</button>
-            </div>
-        </main>
+                <div className="mb-8 flex justify-end gap-2">
+                    <CancelBtn onClick={handleNew} />
+                    <SaveBtn
+                        label={loading ? '저장 중...' : editingId !== null ? '수정 저장' : '저장 및 게시'}
+                        onClick={tab === 'weapon' ? handleSaveWeapon : handleSaveEquipment}
+                    />
+                </div>
+            </main>
+        </div>
     )
 }
 
