@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, memo } from 'react'
 import {
     Section, Field, Input, Select, Textarea,
     AddBtn, RemoveBtn, ItemBox, Grid, CancelBtn, SaveBtn
@@ -158,9 +158,9 @@ const effectDtoToForm = (effects: { effectName: string; effectType: string; base
 
 // ─── 서브 컴포넌트 ─────────────────────────────────────────
 
-const EffectSection = ({
-                           effects, onChange
-                       }: {
+const EffectSection = memo(({
+                                effects, onChange
+                            }: {
     effects: EffectForm[]
     onChange: (effects: EffectForm[]) => void
 }) => {
@@ -228,12 +228,12 @@ const EffectSection = ({
                     <div className="mt-4 flex gap-1 border-b border-[var(--card-border)]">
                         <button
                             onClick={() => setTab(effect._key, 'normal')}
-                            className={`px-4 py-1.5 text-xs font-cinzel tracking-wider transition border-b-2 -mb-px ${getTab(effect._key) === 'normal' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
+                            className={`px-4 py-1.5 text-xs font-cinzel tracking-wider border-b-2 -mb-px ${getTab(effect._key) === 'normal' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
                         >일반 효과</button>
                         {effect.hasExclusive && (
                             <button
                                 onClick={() => setTab(effect._key, 'exclusive')}
-                                className={`px-4 py-1.5 text-xs font-cinzel tracking-wider transition border-b-2 -mb-px ${getTab(effect._key) === 'exclusive' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
+                                className={`px-4 py-1.5 text-xs font-cinzel tracking-wider border-b-2 -mb-px ${getTab(effect._key) === 'exclusive' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
                             >전용 효과</button>
                         )}
                     </div>
@@ -266,7 +266,7 @@ const EffectSection = ({
             <AddBtn onClick={() => onChange([...effects, emptyEffect()])} label="효과 추가" />
         </div>
     )
-}
+})
 
 // ─── 메인 컴포넌트 ─────────────────────────────────────────
 
@@ -286,10 +286,10 @@ const ItemAdmin = () => {
     const [equipmentForm, setEquipmentForm] = useState<EquipmentForm>(emptyEquipmentForm())
     const [loading, setLoading] = useState(false)
 
-    const loadLists = () => {
+    const loadLists = useCallback(() => {
         getWeaponList().then(setWeaponList).catch(() => show('전용무기 목록 로드 실패', 'error'))
         getEquipmentList().then(setEquipmentList).catch(() => show('장비 목록 로드 실패', 'error'))
-    }
+    }, [])
 
     useEffect(() => { loadLists() }, [])
 
@@ -441,7 +441,7 @@ const ItemAdmin = () => {
                         <button
                             key={t}
                             onClick={() => handleTabChange(t)}
-                            className={`flex-1 py-2.5 text-xs font-cinzel tracking-wider transition ${tab === t ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
+                            className={`flex-1 py-2.5 text-xs font-cinzel tracking-wider ${tab === t ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
                         >
                             {t === 'weapon' ? '무기' : '장비'}
                         </button>
@@ -454,7 +454,7 @@ const ItemAdmin = () => {
                     </span>
                     <button
                         onClick={handleNew}
-                        className="rounded bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--accent)]/20 transition"
+                        className="rounded bg-[var(--accent)]/10 border border-[var(--accent)]/30 px-2 py-1 text-xs text-[var(--accent)] hover:bg-[var(--accent)]/20"
                     >
                         + 신규
                     </button>
@@ -465,7 +465,7 @@ const ItemAdmin = () => {
                         <div
                             key={w.weaponId}
                             onClick={() => handleEditWeapon(w.weaponId)}
-                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-white/5 ${editingId === w.weaponId ? 'bg-[var(--accent)]/10' : ''}`}
+                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 hover:bg-white/5 ${editingId === w.weaponId ? 'bg-[var(--accent)]/10' : ''}`}
                         >
                             <div>
                                 <div className={`text-sm font-medium ${editingId === w.weaponId ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{w.name}</div>
@@ -481,7 +481,7 @@ const ItemAdmin = () => {
                         <div
                             key={eq.equipmentId}
                             onClick={() => handleEditEquipment(eq.equipmentId)}
-                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 transition hover:bg-white/5 ${editingId === eq.equipmentId ? 'bg-[var(--accent)]/10' : ''}`}
+                            className={`group flex cursor-pointer items-center justify-between px-4 py-2.5 hover:bg-white/5 ${editingId === eq.equipmentId ? 'bg-[var(--accent)]/10' : ''}`}
                         >
                             <div>
                                 <div className={`text-sm font-medium ${editingId === eq.equipmentId ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>{eq.name}</div>

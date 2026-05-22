@@ -197,7 +197,7 @@ const BuffAdmin = () => {
                     <div className="flex gap-2">
                         {editingId !== null && (
                             <button onClick={handleDelete}
-                                    className="rounded px-4 py-2 text-xs font-bold text-red-400 border border-red-900/40 bg-red-900/20 hover:bg-red-900/30 transition">
+                                    className="rounded px-4 py-2 text-xs font-bold text-red-400 border border-red-900/40 bg-red-900/20 hover:bg-red-900/30">
                                 삭제
                             </button>
                         )}
@@ -209,7 +209,7 @@ const BuffAdmin = () => {
                 <div className="mb-5 flex gap-1 border-b border-[var(--card-border)]">
                     {(['buff', 'tag'] as const).map(tab => (
                         <button key={tab} onClick={() => setMainTab(tab)}
-                                className={`px-6 py-2.5 font-cinzel text-xs tracking-wider transition border-b-2 -mb-px ${mainTab === tab ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                                className={`px-6 py-2.5 font-cinzel text-xs tracking-wider border-b-2 -mb-px ${mainTab === tab ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                             {tab === 'buff' ? '버프 / 디버프' : '태그 관리'}
                         </button>
                     ))}
@@ -220,7 +220,7 @@ const BuffAdmin = () => {
                         <div className="mb-4 flex gap-1">
                             {(['buff', 'debuff'] as const).map(tab => (
                                 <button key={tab} onClick={() => { setBuffTypeTab(tab); resetForm() }}
-                                        className={`rounded px-4 py-1.5 text-xs font-bold transition ${buffTypeTab === tab
+                                        className={`rounded px-4 py-1.5 text-xs font-bold ${buffTypeTab === tab
                                             ? tab === 'buff' ? 'bg-green-900/40 text-green-400' : 'bg-red-900/40 text-red-400'
                                             : 'bg-stone-800/60 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                                     {tab === 'buff' ? '버프' : '디버프'}
@@ -239,7 +239,7 @@ const BuffAdmin = () => {
                                         <button
                                             key={id}
                                             onClick={() => isEditing ? resetForm() : fillForm(item)}
-                                            className={`rounded px-3 py-1.5 text-xs transition border ${isEditing
+                                            className={`rounded px-3 py-1.5 text-xs border ${isEditing
                                                 ? 'border-[var(--accent)] bg-[var(--accent-hover)] text-[var(--accent)]'
                                                 : buffTypeTab === 'buff'
                                                     ? 'border-green-900/40 bg-green-900/20 text-green-300 hover:bg-green-900/30'
@@ -287,7 +287,7 @@ const BuffAdmin = () => {
                             <div className="mt-3 flex items-center gap-3">
                                 <label className="text-xs font-semibold text-[var(--text-secondary)]">레벨별 효과</label>
                                 <button onClick={() => toggleLevels(!hasLevels)}
-                                        className={`rounded px-3 py-1 text-xs transition ${hasLevels ? 'bg-[var(--accent-hover)] border border-[var(--accent)] text-[var(--accent)]' : 'bg-stone-800 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                                        className={`rounded px-3 py-1 text-xs ${hasLevels ? 'bg-[var(--accent-hover)] border border-[var(--accent)] text-[var(--accent)]' : 'bg-stone-800 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                                     {hasLevels ? '사용 중' : '사용 안 함'}
                                 </button>
                             </div>
@@ -298,7 +298,7 @@ const BuffAdmin = () => {
                                         <ItemBox key={lv.level} className="bg-stone-900/20">
                                             <div className="mb-2 flex items-center justify-between">
                                                 <span className="rounded bg-[var(--accent-hover)] px-2 py-0.5 text-xs font-bold text-[var(--accent)]">{lv.level}레벨</span>
-                                                <button onClick={() => removeLevel(idx)} className="text-xs text-[var(--text-muted)] hover:text-red-400 transition">✕</button>
+                                                <button onClick={() => removeLevel(idx)} className="text-xs text-[var(--text-muted)] hover:text-red-400">✕</button>
                                             </div>
                                             <div className="mb-2">
                                                 <Field label="레벨 이름 (비우면 자동생성)">
@@ -328,7 +328,7 @@ const BuffAdmin = () => {
                                         </ItemBox>
                                     ))}
                                     <button onClick={addLevel}
-                                            className="mt-1 rounded border border-dashed border-[var(--card-border)] px-3 py-1.5 text-xs text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition">
+                                            className="mt-1 rounded border border-dashed border-[var(--card-border)] px-3 py-1.5 text-xs text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
                                         + 레벨 추가
                                     </button>
                                 </div>
@@ -339,7 +339,7 @@ const BuffAdmin = () => {
                                 <div className="flex flex-wrap gap-1.5">
                                     {tagList.map(tag => (
                                         <button key={tag.tagId} onClick={() => toggleTag(tag.tagId)}
-                                                className={`rounded px-2.5 py-1 text-xs transition ${selectedTagIds.includes(tag.tagId) ? getTagColorClass(tag.color) : 'bg-stone-800/60 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                                                className={`rounded px-2.5 py-1 text-xs ${selectedTagIds.includes(tag.tagId) ? getTagColorClass(tag.color) : 'bg-stone-800/60 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
                                             {tag.name}
                                         </button>
                                     ))}
@@ -361,7 +361,7 @@ const BuffAdmin = () => {
                             <div className="w-32">
                                 <Field label="색상">
                                     <select value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-                                            className="theme-input w-full rounded px-3 py-2 text-sm transition">
+                                            className="theme-input w-full rounded px-3 py-2 text-sm">
                                         {TAG_COLORS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                     </select>
                                 </Field>
@@ -372,7 +372,7 @@ const BuffAdmin = () => {
                             {tagList.map(tag => (
                                 <div key={tag.tagId} className="flex items-center gap-1.5">
                                     <span className={`rounded px-2.5 py-1 text-xs ${getTagColorClass(tag.color)}`}>{tag.name}</span>
-                                    <button onClick={() => handleDeleteTag(tag.tagId)} className="text-[var(--text-muted)] hover:text-red-400 transition text-xs">✕</button>
+                                    <button onClick={() => handleDeleteTag(tag.tagId)} className="text-[var(--text-muted)] hover:text-red-400 text-xs">✕</button>
                                 </div>
                             ))}
                         </div>

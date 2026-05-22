@@ -62,7 +62,6 @@
 .theme-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    backdrop-filter: blur(6px);
 }
 
 .theme-card-header {
@@ -72,7 +71,6 @@
 
 .theme-sidebar {
     background: var(--sidebar-bg);
-    backdrop-filter: blur(4px);
 }
 
 .theme-input {

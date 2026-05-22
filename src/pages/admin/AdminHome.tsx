@@ -41,9 +41,9 @@ const AdminHome = () => {
                     <div
                         key={menu.title}
                         onClick={() => navigate(menu.href)}
-                        className="group relative cursor-pointer overflow-hidden rounded border border-amber-900/25 bg-stone-950/40 p-6 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-amber-700/50 hover:bg-amber-900/6"
+                        className="group relative cursor-pointer overflow-hidden rounded border border-amber-900/25 bg-stone-950/40 p-6-[transform,border-color,background-color] hover:-translate-y-0.5 hover:border-amber-700/50 hover:bg-amber-900/6"
                     >
-                        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-800/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+                        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-800/40 to-transparent opacity-0 group-hover:opacity-100" />
                         <div className="mb-3 text-3xl">{menu.icon}</div>
                         <div className="mb-1 font-cinzel text-sm tracking-wider text-amber-400">
                             {menu.title}

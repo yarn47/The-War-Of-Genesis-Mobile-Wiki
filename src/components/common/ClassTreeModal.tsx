@@ -69,7 +69,7 @@ const ClassTreeModal = ({ onClose, onSave }: ClassTreeModalProps) => {
                         <h2 className="font-cinzel text-sm tracking-widest text-amber-400">클래스 트리 설정</h2>
                         <p className="mt-0.5 text-xs text-stone-600">클래스를 추가하고 상위 클래스를 연결하세요</p>
                     </div>
-                    <button onClick={onClose} className="text-stone-600 hover:text-stone-300 transition text-lg">✕</button>
+                    <button onClick={onClose} className="text-stone-600 hover:text-stone-300 text-lg">✕</button>
                 </div>
 
                 <div className="p-6">
@@ -89,7 +89,7 @@ const ClassTreeModal = ({ onClose, onSave }: ClassTreeModalProps) => {
                                     <button
                                         key={cls.id}
                                         onClick={() => addNode(cls)}
-                                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-stone-300 hover:bg-amber-900/10 transition border-b border-stone-800 last:border-0"
+                                        className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-stone-300 hover:bg-amber-900/10 border-b border-stone-800 last:border-0"
                                     >
                                         <span>{cls.class_name}</span>
                                         <span className="text-xs text-stone-600">Tier {cls.tier}</span>
@@ -182,8 +182,8 @@ const ClassTreeModal = ({ onClose, onSave }: ClassTreeModalProps) => {
 
                 {/* 하단 버튼 */}
                 <div className="flex justify-end gap-2 border-t border-amber-900/25 px-6 py-4">
-                    <button onClick={onClose} className="rounded border border-stone-700 px-4 py-2 text-xs text-stone-400 hover:bg-stone-800 transition">취소</button>
-                    <button onClick={() => { onSave(nodes); onClose() }} className="rounded border border-amber-700/50 bg-amber-900/20 px-4 py-2 text-xs text-amber-400 hover:bg-amber-900/30 transition">저장</button>
+                    <button onClick={onClose} className="rounded border border-stone-700 px-4 py-2 text-xs text-stone-400 hover:bg-stone-800">취소</button>
+                    <button onClick={() => { onSave(nodes); onClose() }} className="rounded border border-amber-700/50 bg-amber-900/20 px-4 py-2 text-xs text-amber-400 hover:bg-amber-900/30">저장</button>
                 </div>
             </div>
         </div>
@@ -204,7 +204,7 @@ const ClassNodeCard = ({ node, nodes, onRemove, onSetParent, getParentName }: {
         <div className="rounded border border-amber-900/20 bg-stone-900/60 p-3 w-44">
             <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-stone-200">{node.class_name}</span>
-                <button onClick={() => onRemove(node.id)} className="text-stone-700 hover:text-red-500 transition text-xs">✕</button>
+                <button onClick={() => onRemove(node.id)} className="text-stone-700 hover:text-red-500 text-xs">✕</button>
             </div>
             {node.tier > 1 && possibleParents.length > 0 && (
                 <div>

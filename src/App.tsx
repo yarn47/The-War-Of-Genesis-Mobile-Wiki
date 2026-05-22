@@ -4,6 +4,8 @@ import Header from './components/layout/Header'
 import Sidebar from './components/layout/Sidebar'
 import Footer from './components/layout/Footer'
 import Home from './pages/Home'
+import CharacterDetail from './pages/CharacterDetail'
+import CharacterList from './pages/CharacterList'
 import AdminHome from './pages/admin/AdminHome'
 import CharacterAdmin from './pages/admin/CharacterAdmin'
 import ClassAdmin from './pages/admin/ClassAdmin'
@@ -36,6 +38,8 @@ function App() {
                         <Sidebar />
                         <Routes>
                             <Route path="/" element={<Home />} />
+                            <Route path="/characters" element={<CharacterList />} />
+                            <Route path="/characters/:id" element={<CharacterDetail />} />
                             <Route path="/admin" element={<AdminHome />} />
                             <Route path="/admin/character" element={<CharacterAdmin />} />
                             <Route path="/admin/class" element={<ClassAdmin />} />

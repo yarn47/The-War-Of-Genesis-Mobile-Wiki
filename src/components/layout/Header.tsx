@@ -12,7 +12,7 @@ const THEMES: { key: Theme; label: string }[] = [
 
 const Header = ({ theme, setTheme }: HeaderProps) => {
     return (
-        <header className="sticky top-0 z-50 border-b border-[var(--card-border)] bg-[var(--card-header-bg)] backdrop-blur-md">
+        <header className="sticky top-0 z-50 border-b border-[var(--card-border)] bg-[var(--card-header-bg)]">
             <div className="mx-auto flex h-15 max-w-screen-2xl items-center gap-6 px-6">
                 {/* 로고 */}
                 <div className="flex items-baseline gap-2 whitespace-nowrap">
@@ -32,7 +32,7 @@ const Header = ({ theme, setTheme }: HeaderProps) => {
                     <input
                         type="text"
                         placeholder="캐릭터, 아이템, 스킬 검색..."
-                        className="theme-input w-full rounded py-2 pl-9 pr-4 text-sm transition"
+                        className="theme-input w-full rounded py-2 pl-9 pr-4 text-sm"
                     />
                 </div>
 
@@ -42,7 +42,7 @@ const Header = ({ theme, setTheme }: HeaderProps) => {
                         <button
                             key={t.key}
                             onClick={() => setTheme(t.key)}
-                            className={`px-3 py-1.5 rounded font-cinzel text-[10px] tracking-widest transition ${
+                            className={`px-3 py-1.5 rounded font-cinzel text-[10px] tracking-widest ${
                                 theme === t.key
                                     ? 'bg-[var(--accent-hover)] border border-[var(--accent)] text-[var(--accent)]'
                                     : 'border border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
@@ -54,7 +54,7 @@ const Header = ({ theme, setTheme }: HeaderProps) => {
                 </div>
 
                 {/* 로그인 */}
-                <button className="whitespace-nowrap rounded border border-[var(--card-border)] px-4 py-1.5 font-cinzel text-xs tracking-widest text-[var(--accent)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-hover)]">
+                <button className="whitespace-nowrap rounded border border-[var(--card-border)] px-4 py-1.5 font-cinzel text-xs tracking-widest text-[var(--accent)] hover:border-[var(--accent)] hover:bg-[var(--accent-hover)]">
                     LOGIN
                 </button>
             </div>

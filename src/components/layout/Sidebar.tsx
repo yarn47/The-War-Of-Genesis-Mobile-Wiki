@@ -49,7 +49,7 @@ const Sidebar = () => {
                         <Link
                             key={item.name}
                             to={item.href}
-                            className={`block border-l-2 px-4 py-2 text-[13px] tracking-wide transition-all duration-150
+                            className={`block border-l-2 px-4 py-2 text-[13px] tracking-wide
                 ${location.pathname === item.href
                                 ? 'border-amber-500 bg-[var(--accent-hover)] text-amber-400'
                                 : 'border-transparent text-[var(--text-secondary)] hover:border-amber-700 hover:bg-[var(--accent-hover)] hover:text-amber-200'

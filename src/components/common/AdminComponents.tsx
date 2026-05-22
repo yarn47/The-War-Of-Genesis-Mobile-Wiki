@@ -24,27 +24,27 @@ export const Field = ({ label, required, children }: { label: string; required?:
 )
 
 export const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-    <input {...props} className="theme-input w-full rounded px-3 py-2 text-sm transition" />
+    <input {...props} className="theme-input w-full rounded px-3 py-2 text-sm" />
 )
 
 export const Select = ({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-    <select {...props} className="theme-input w-full rounded px-3 py-2 text-sm transition">
+    <select {...props} className="theme-input w-full rounded px-3 py-2 text-sm">
         {children}
     </select>
 )
 
 export const Textarea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-    <textarea {...props} className="theme-input w-full rounded px-3 py-2 text-sm transition" />
+    <textarea {...props} className="theme-input w-full rounded px-3 py-2 text-sm" />
 )
 
 export const AddBtn = ({ onClick, label }: { onClick: () => void; label: string }) => (
-    <button onClick={onClick} className="mt-2 rounded border border-dashed border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent)]">
+    <button onClick={onClick} className="mt-2 rounded border border-dashed border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
         + {label}
     </button>
 )
 
 export const RemoveBtn = ({ onClick }: { onClick: () => void }) => (
-    <button onClick={onClick} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] transition hover:border-red-500/50 hover:text-red-400">
+    <button onClick={onClick} className="rounded border border-[var(--card-border)] px-2 py-1 text-xs text-[var(--text-muted)] hover:border-red-500/50 hover:text-red-400">
         삭제
     </button>
 )
@@ -63,7 +63,7 @@ export const Collapse = ({ title, children }: { title: string; children: React.R
         <div className="rounded border border-[var(--card-border)] overflow-hidden mb-3">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-black/20 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition"
+                className="w-full flex items-center justify-between px-4 py-3 bg-black/20 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
                 <span>{title}</span>
                 <span className="text-[var(--text-muted)]">{open ? '▲' : '▼'}</span>
@@ -74,19 +74,19 @@ export const Collapse = ({ title, children }: { title: string; children: React.R
 }
 
 export const CancelBtn = ({ onClick }: { onClick?: () => void }) => (
-    <button onClick={onClick} className="rounded border border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)] transition hover:bg-[var(--accent-hover)]">
+    <button onClick={onClick} className="rounded border border-[var(--card-border)] px-4 py-2 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-hover)]">
         취소
     </button>
 )
 
 export const DraftBtn = ({ onClick }: { onClick?: () => void }) => (
-    <button onClick={onClick} className="rounded border border-[var(--card-border)] bg-black/20 px-4 py-2 text-xs text-[var(--text-secondary)] transition hover:bg-black/30">
+    <button onClick={onClick} className="rounded border border-[var(--card-border)] bg-black/20 px-4 py-2 text-xs text-[var(--text-secondary)] hover:bg-black/30">
         임시저장
     </button>
 )
 
 export const SaveBtn = ({ label = '저장 및 게시', onClick }: { label?: string; onClick?: () => void }) => (
-    <button onClick={onClick} className="rounded border border-[var(--accent)] bg-[var(--accent-hover)] px-4 py-2 text-xs text-[var(--accent)] transition hover:opacity-80">
+    <button onClick={onClick} className="rounded border border-[var(--accent)] bg-[var(--accent-hover)] px-4 py-2 text-xs text-[var(--accent)] hover:opacity-80">
         {label}
     </button>
 )

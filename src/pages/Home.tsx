@@ -62,7 +62,7 @@ const Home = () => {
                     <CardHeader title="최신 소식" />
                     <div className="px-2 py-2">
                         {newsItems.map((item) => (
-                            <div key={item.title} className="flex cursor-pointer items-center justify-between rounded border-l-2 border-transparent px-3 py-2.5 transition-all hover:border-amber-700 hover:bg-[var(--accent-hover)]">
+                            <div key={item.title} className="flex cursor-pointer items-center justify-between rounded border-l-2 border-transparent px-3 py-2.5 hover:border-amber-700 hover:bg-[var(--accent-hover)]">
                                 <span className="text-sm text-[var(--text-primary)]">{item.title}</span>
                                 <span className="ml-3 whitespace-nowrap text-xs text-[var(--text-muted)]">{item.date}</span>
                             </div>
@@ -75,7 +75,7 @@ const Home = () => {
                     <CardHeader title="인기 문서" />
                     <div className="px-2 py-2">
                         {popularItems.map((item) => (
-                            <div key={item.rank} className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 transition hover:bg-[var(--accent-hover)]">
+                            <div key={item.rank} className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 hover:bg-[var(--accent-hover)]">
                                 <span className="w-6 text-center font-cinzel text-lg font-bold text-amber-800">{item.rank}</span>
                                 <div className="flex-1">
                                     <div className="text-sm text-[var(--text-primary)]">{item.name}</div>
@@ -92,8 +92,8 @@ const Home = () => {
                     <CardHeader title="카테고리" />
                     <div className="grid grid-cols-4 gap-2.5 p-4">
                         {categories.map((cat) => (
-                            <div key={cat.name} className="group relative cursor-pointer overflow-hidden rounded border border-[var(--card-border)] bg-white/[0.03] p-5 text-center transition-all hover:-translate-y-0.5 hover:border-amber-700/50 hover:bg-[var(--accent-hover)]">
-                                <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-800/40 to-transparent opacity-0 transition group-hover:opacity-100" />
+                            <div key={cat.name} className="group relative cursor-pointer overflow-hidden rounded border border-[var(--card-border)] bg-white/[0.03] p-5 text-center hover:-translate-y-0.5 hover:border-amber-700/50 hover:bg-[var(--accent-hover)]">
+                                <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-amber-800/40 to-transparent opacity-0 group-hover:opacity-100" />
                                 <div className="mb-2 text-2xl">{cat.icon}</div>
                                 <div className="mb-1 font-serif-kr text-sm text-[var(--text-primary)]">{cat.name}</div>
                                 <div className="text-xs text-[var(--text-muted)]">{cat.count}</div>
@@ -109,7 +109,7 @@ const Home = () => {
                     <div className="mb-3 font-cinzel text-[10px] tracking-[0.15em] text-amber-800 uppercase">최근 업데이트</div>
                     {recentUpdates.map((item) => (
                         <div key={item.name} className="group cursor-pointer border-b border-[var(--card-border)] py-1.5 last:border-0">
-                            <div className="text-xs text-[var(--text-secondary)] transition group-hover:text-amber-300">{item.name}</div>
+                            <div className="text-xs text-[var(--text-secondary)] group-hover:text-amber-300">{item.name}</div>
                             <div className="text-[10px] text-[var(--text-muted)]">{item.time}</div>
                         </div>
                     ))}

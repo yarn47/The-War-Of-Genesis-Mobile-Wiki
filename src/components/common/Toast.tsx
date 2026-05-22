@@ -29,7 +29,7 @@ const Toast = ({ message, type = 'success', duration = 2500, onClose }: ToastPro
     }, [])
 
     return (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-300
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50
             ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
             <div className={`flex items-center gap-2.5 rounded-lg border bg-[var(--card-bg)]
                 px-4 py-3 shadow-xl text-sm ${COLORS[type]}`}>
