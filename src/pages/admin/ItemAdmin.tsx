@@ -39,10 +39,12 @@ const ARMOR_TYPES = ['helmet', 'armor', 'gloves', 'boots']
 interface EffectForm {
     _key: number
     effectName: string
-    effectType: string
-    baseEffect: string
     iconUrl: string
-    levels: { [step: number]: string }
+    normalBaseEffect: string
+    normalLevels: { [step: number]: string }
+    hasExclusive: boolean
+    exclusiveBaseEffect: string
+    exclusiveLevels: { [step: number]: string }
 }
 
 interface EquipmentForm {
@@ -75,9 +77,12 @@ interface WeaponForm {
 
 const emptyEffect = (): EffectForm => ({
     _key: Date.now() + Math.random(),
-    effectName: '', effectType: 'normal',
-    baseEffect: '', iconUrl: '',
-    levels: { 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' }
+    effectName: '', iconUrl: '',
+    normalBaseEffect: '',
+    normalLevels: { 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' },
+    hasExclusive: false,
+    exclusiveBaseEffect: '',
+    exclusiveLevels: { 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' }
 })
 
 const emptyEquipmentForm = (): EquipmentForm => ({
@@ -99,26 +104,57 @@ const emptyWeaponForm = (): WeaponForm => ({
 
 const toStr = (v: string) => v.trim() === '' ? null : v.trim()
 
-const effectFormToRequest = (e: EffectForm): EquipmentEffectRequest | WeaponEffectRequest => ({
-    effectName: e.effectName,
-    effectType: e.effectType,
-    baseEffect: toStr(e.baseEffect),
-    iconUrl: toStr(e.iconUrl),
-    levels: BREAKTHROUGH_STEPS
-        .filter(s => e.levels[s]?.trim())
-        .map((s): EffectLevelRequest => ({ breakthroughStep: s, effectText: e.levels[s] }))
-})
+const effectFormToRequests = (e: EffectForm): (EquipmentEffectRequest | WeaponEffectRequest)[] => {
+    const results: (EquipmentEffectRequest | WeaponEffectRequest)[] = []
+    // 일반 효과
+    results.push({
+        effectName: e.effectName,
+        effectType: 'normal',
+        baseEffect: toStr(e.normalBaseEffect),
+        iconUrl: toStr(e.iconUrl),
+        levels: BREAKTHROUGH_STEPS
+            .filter(s => e.normalLevels[s]?.trim())
+            .map((s): EffectLevelRequest => ({ breakthroughStep: s, effectText: e.normalLevels[s] }))
+    })
+    // 전용 효과 (체크된 경우만)
+    if (e.hasExclusive) {
+        results.push({
+            effectName: e.effectName,
+            effectType: 'exclusive',
+            baseEffect: toStr(e.exclusiveBaseEffect),
+            iconUrl: toStr(e.iconUrl),
+            levels: BREAKTHROUGH_STEPS
+                .filter(s => e.exclusiveLevels[s]?.trim())
+                .map((s): EffectLevelRequest => ({ breakthroughStep: s, effectText: e.exclusiveLevels[s] }))
+        })
+    }
+    return results
+}
 
-const effectDtoToForm = (e: { effectName: string; effectType: string; baseEffect: string | null; iconUrl: string | null; levels: { breakthroughStep: number; effectText: string | null }[] }): EffectForm => ({
-    _key: Date.now() + Math.random(),
-    effectName: e.effectName,
-    effectType: e.effectType,
-    baseEffect: e.baseEffect ?? '',
-    iconUrl: e.iconUrl ?? '',
-    levels: Object.fromEntries(
-        BREAKTHROUGH_STEPS.map(s => [s, e.levels.find(l => l.breakthroughStep === s)?.effectText ?? ''])
-    )
-})
+const effectDtoToForm = (effects: { effectName: string; effectType: string; baseEffect: string | null; iconUrl: string | null; levels: { breakthroughStep: number; effectText: string | null }[] }[]): EffectForm[] => {
+    // effectName 기준으로 normal/exclusive 묶기
+    const grouped = new Map<string, { normal?: typeof effects[0]; exclusive?: typeof effects[0] }>()
+    effects.forEach(e => {
+        const g = grouped.get(e.effectName) ?? {}
+        if (e.effectType === 'exclusive') g.exclusive = e
+        else g.normal = e
+        grouped.set(e.effectName, g)
+    })
+    return Array.from(grouped.entries()).map(([name, g]) => ({
+        _key: Date.now() + Math.random(),
+        effectName: name,
+        iconUrl: g.normal?.iconUrl ?? g.exclusive?.iconUrl ?? '',
+        normalBaseEffect: g.normal?.baseEffect ?? '',
+        normalLevels: Object.fromEntries(
+            BREAKTHROUGH_STEPS.map(s => [s, g.normal?.levels.find(l => l.breakthroughStep === s)?.effectText ?? ''])
+        ),
+        hasExclusive: !!g.exclusive,
+        exclusiveBaseEffect: g.exclusive?.baseEffect ?? '',
+        exclusiveLevels: Object.fromEntries(
+            BREAKTHROUGH_STEPS.map(s => [s, g.exclusive?.levels.find(l => l.breakthroughStep === s)?.effectText ?? ''])
+        )
+    }))
+}
 
 // ─── 서브 컴포넌트 ─────────────────────────────────────────
 
@@ -128,11 +164,39 @@ const EffectSection = ({
     effects: EffectForm[]
     onChange: (effects: EffectForm[]) => void
 }) => {
-    const update = (key: number, field: keyof EffectForm, val: string) =>
+    const [effectTabs, setEffectTabs] = useState<{ [key: number]: 'normal' | 'exclusive' }>({})
+
+    const update = (key: number, field: keyof EffectForm, val: string | boolean) =>
         onChange(effects.map(e => e._key === key ? { ...e, [field]: val } : e))
 
-    const updateLevel = (key: number, step: number, val: string) =>
-        onChange(effects.map(e => e._key === key ? { ...e, levels: { ...e.levels, [step]: val } } : e))
+    const updateLevel = (key: number, type: 'normal' | 'exclusive', step: number, val: string) =>
+        onChange(effects.map(e => e._key === key ? {
+            ...e,
+            normalLevels: type === 'normal' ? { ...e.normalLevels, [step]: val } : e.normalLevels,
+            exclusiveLevels: type === 'exclusive' ? { ...e.exclusiveLevels, [step]: val } : e.exclusiveLevels
+        } : e))
+
+    const getTab = (key: number) => effectTabs[key] ?? 'normal'
+    const setTab = (key: number, tab: 'normal' | 'exclusive') =>
+        setEffectTabs(prev => ({ ...prev, [key]: tab }))
+
+    const LevelInputs = ({ effectKey, type, levels }: { effectKey: number; type: 'normal' | 'exclusive'; levels: { [step: number]: string } }) => (
+        <div className="space-y-2">
+            {BREAKTHROUGH_STEPS.map(step => (
+                <div key={step} className="flex items-start gap-3">
+                    <span className={`mt-2 shrink-0 rounded px-2 py-0.5 text-xs font-bold ${step <= 3 ? 'bg-blue-900/20 text-blue-400' : 'bg-amber-900/20 text-amber-500'}`}>
+                        {step}단
+                    </span>
+                    <Textarea
+                        rows={1}
+                        value={levels[step]}
+                        onChange={e => updateLevel(effectKey, type, step, e.target.value)}
+                        placeholder={`${step}단 ${type === 'exclusive' ? '전용 ' : ''}효과...`}
+                    />
+                </div>
+            ))}
+        </div>
+    )
 
     return (
         <div className="space-y-4">
@@ -140,15 +204,16 @@ const EffectSection = ({
                 <ItemBox key={effect._key}>
                     <div className="mb-3 flex items-center justify-between">
                         <span className="text-xs font-bold text-[var(--accent)]">효과 {idx + 1}</span>
-                        <div className="flex items-center gap-2">
-                            <Select
-                                value={effect.effectType}
-                                onChange={e => update(effect._key, 'effectType', e.target.value)}
-                                style={{ width: 90 }}
-                            >
-                                <option value="normal">일반</option>
-                                <option value="exclusive">전용</option>
-                            </Select>
+                        <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={effect.hasExclusive}
+                                    onChange={e => update(effect._key, 'hasExclusive', e.target.checked)}
+                                    className="accent-amber-500"
+                                />
+                                <span className="text-xs text-[var(--text-muted)]">전용 효과 있음</span>
+                            </label>
                             <RemoveBtn onClick={() => onChange(effects.filter(e => e._key !== effect._key))} />
                         </div>
                     </div>
@@ -160,28 +225,41 @@ const EffectSection = ({
                             <Input value={effect.iconUrl} onChange={e => update(effect._key, 'iconUrl', e.target.value)} placeholder="https://..." />
                         </Field>
                     </Grid>
-                    <div className="mt-3">
-                        <Field label="기본 효과 설명">
-                            <Textarea rows={2} value={effect.baseEffect} onChange={e => update(effect._key, 'baseEffect', e.target.value)} placeholder="기본 효과 설명..." />
-                        </Field>
+                    <div className="mt-4 flex gap-1 border-b border-[var(--card-border)]">
+                        <button
+                            onClick={() => setTab(effect._key, 'normal')}
+                            className={`px-4 py-1.5 text-xs font-cinzel tracking-wider transition border-b-2 -mb-px ${getTab(effect._key) === 'normal' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
+                        >일반 효과</button>
+                        {effect.hasExclusive && (
+                            <button
+                                onClick={() => setTab(effect._key, 'exclusive')}
+                                className={`px-4 py-1.5 text-xs font-cinzel tracking-wider transition border-b-2 -mb-px ${getTab(effect._key) === 'exclusive' ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
+                            >전용 효과</button>
+                        )}
                     </div>
                     <div className="mt-3">
-                        <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">돌파 단계별 효과</div>
-                        <div className="space-y-2">
-                            {BREAKTHROUGH_STEPS.map(step => (
-                                <div key={step} className="flex items-start gap-3">
-                                    <span className={`mt-2 shrink-0 rounded px-2 py-0.5 text-xs font-bold ${step <= 3 ? 'bg-blue-900/20 text-blue-400' : 'bg-amber-900/20 text-amber-500'}`}>
-                                        {step}단
-                                    </span>
-                                    <Textarea
-                                        rows={1}
-                                        value={effect.levels[step]}
-                                        onChange={e => updateLevel(effect._key, step, e.target.value)}
-                                        placeholder={`${step}단 효과... [수치]{red} 태그 가능`}
-                                    />
+                        {getTab(effect._key) === 'normal' && (
+                            <>
+                                <Field label="기본 효과 설명">
+                                    <Textarea rows={2} value={effect.normalBaseEffect} onChange={e => update(effect._key, 'normalBaseEffect', e.target.value)} placeholder="기본 효과 설명..." />
+                                </Field>
+                                <div className="mt-3">
+                                    <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">돌파 단계별 효과</div>
+                                    <LevelInputs effectKey={effect._key} type="normal" levels={effect.normalLevels} />
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        )}
+                        {getTab(effect._key) === 'exclusive' && effect.hasExclusive && (
+                            <>
+                                <Field label="전용 기본 효과 설명">
+                                    <Textarea rows={2} value={effect.exclusiveBaseEffect} onChange={e => update(effect._key, 'exclusiveBaseEffect', e.target.value)} placeholder="전용 효과 설명..." />
+                                </Field>
+                                <div className="mt-3">
+                                    <div className="mb-2 text-xs font-semibold text-[var(--text-muted)]">돌파 단계별 효과</div>
+                                    <LevelInputs effectKey={effect._key} type="exclusive" levels={effect.exclusiveLevels} />
+                                </div>
+                            </>
+                        )}
                     </div>
                 </ItemBox>
             ))}
@@ -238,7 +316,7 @@ const ItemAdmin = () => {
                 extraStats: d.extraStats ?? '',
                 description: d.description ?? '',
                 iconUrl: d.iconUrl ?? '',
-                effects: d.effects.map(effectDtoToForm)
+                effects: effectDtoToForm(d.effects)
             })
             setEditingId(id)
         } catch { show('불러오기 실패', 'error') }
@@ -260,7 +338,7 @@ const ItemAdmin = () => {
                 setEffect4: d.setEffect4 ?? '',
                 description: d.description ?? '',
                 iconUrl: d.iconUrl ?? '',
-                effects: d.effects.map(effectDtoToForm)
+                effects: effectDtoToForm(d.effects)
             })
             setEditingId(id)
         } catch { show('불러오기 실패', 'error') }
@@ -268,7 +346,7 @@ const ItemAdmin = () => {
 
     // 삭제
     const handleDeleteWeapon = async (id: number, name: string) => {
-        if (!confirm(`"${name}" 전용무기를 삭제할까요?`)) return
+        if (!confirm(`"${name}" 무기를 삭제할까요?`)) return
         try {
             await deleteWeapon(id)
             show('삭제 완료')
@@ -300,7 +378,7 @@ const ItemAdmin = () => {
                 extraStats: toStr(weaponForm.extraStats),
                 description: toStr(weaponForm.description),
                 iconUrl: toStr(weaponForm.iconUrl),
-                effects: weaponForm.effects.map(effectFormToRequest) as WeaponEffectRequest[]
+                effects: weaponForm.effects.flatMap(effectFormToRequests) as WeaponEffectRequest[]
             }
             if (editingId !== null) {
                 await updateWeapon(editingId, req)
@@ -332,7 +410,7 @@ const ItemAdmin = () => {
                 setEffect4: toStr(equipmentForm.setEffect4),
                 description: toStr(equipmentForm.description),
                 iconUrl: toStr(equipmentForm.iconUrl),
-                effects: equipmentForm.effects.map(effectFormToRequest) as EquipmentEffectRequest[]
+                effects: equipmentForm.effects.flatMap(effectFormToRequests) as EquipmentEffectRequest[]
             }
             if (editingId !== null) {
                 await updateEquipment(editingId, req)
@@ -365,7 +443,7 @@ const ItemAdmin = () => {
                             onClick={() => handleTabChange(t)}
                             className={`flex-1 py-2.5 text-xs font-cinzel tracking-wider transition ${tab === t ? 'bg-[var(--accent)]/10 text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
                         >
-                            {t === 'weapon' ? '전용무기' : '장비'}
+                            {t === 'weapon' ? '무기' : '장비'}
                         </button>
                     ))}
                 </div>
@@ -425,8 +503,8 @@ const ItemAdmin = () => {
             <main className="min-w-0 flex-1 overflow-y-auto px-8 py-7">
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h1 className="font-cinzel text-lg tracking-widest text-amber-400">
-                            {tab === 'weapon' ? '전용무기' : '장비'} {editingId !== null ? '수정' : '등록'}
+                        <h1 className="font-cinzel text-lg tracking-widest text-[var(--accent)]">
+                            {tab === 'weapon' ? '무기' : '장비'} {editingId !== null ? '수정' : '등록'}
                         </h1>
                         <p className="mt-0.5 text-xs text-stone-600">
                             {editingId !== null ? `ID: ${editingId}` : '* 필수 입력'}

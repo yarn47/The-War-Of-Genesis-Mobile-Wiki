@@ -174,3 +174,102 @@ export const getCharacterList = () =>
 // 캐릭터 상세
 export const getCharacterDetail = (id: number) =>
     api.get<CharacterDetailDto>(`/characters/${id}`).then(res => res.data)
+// ─── Request 타입 ─────────────────────────────────────────
+
+export interface PassiveLevelRequest {
+    unlockType: string
+    unlockStep: number
+    effectText: string | null
+}
+
+export interface PassiveRequest {
+    name: string
+    iconUrl: string | null
+    levels: PassiveLevelRequest[]
+}
+
+export interface UltimateLevelRequest {
+    manifestStep: number
+    tpCost: number | null
+    rangeMin: number | null
+    rangeMax: number | null
+    cooldown: number | null
+    effectText: string | null
+}
+
+export interface UltimateRequest {
+    name: string
+    iconUrl: string | null
+    levels: UltimateLevelRequest[]
+}
+
+export interface ArtifactLevelRequest {
+    manifestStep: number
+    effectText: string | null
+}
+
+export interface ArtifactRequest {
+    name: string
+    artifactOrder: number
+    iconUrl: string | null
+    levels: ArtifactLevelRequest[]
+}
+
+export interface ClassTreeNodeRequest {
+    classId: number
+    orderInTier: number | null
+}
+
+export interface CharacterStatsRequest {
+    hp: number | null
+    attack: number | null
+    defense: number | null
+    critRate: number | null
+    critDamage: number | null
+    physPen: number | null
+    magicPen: number | null
+    effectResist: number | null
+}
+
+export interface CharacterRequest {
+    name: string
+    grade: string
+    faction: string
+    element: string
+    exclusiveWeaponId: number | null
+    birthYear: string | null
+    height: string | null
+    cv: string | null
+    profileText: string | null
+    thumbnailUrl: string | null
+    portraitUrl: string | null
+    fullImageUrl: string | null
+    isPublished: boolean
+    stats: CharacterStatsRequest | null
+    classTreeIds: ClassTreeNodeRequest[]
+    passive: PassiveRequest | null
+    ultimate: UltimateRequest | null
+    artifacts: ArtifactRequest[]
+}
+
+// ─── CRUD API ─────────────────────────────────────────────
+
+// 관리자 전체 목록 (비발행 포함)
+export const getAdminCharacterList = () =>
+    api.get<CharacterSummaryDto[]>('/characters/admin').then(res => res.data)
+
+// 관리자 상세 (비발행 포함)
+export const getAdminCharacterDetail = (id: number) =>
+    api.get<CharacterDetailDto>(`/characters/admin/${id}`).then(res => res.data)
+
+// 생성
+export const createCharacter = (req: CharacterRequest) =>
+    api.post<CharacterDetailDto>('/characters', req).then(res => res.data)
+
+// 수정
+export const updateCharacter = (id: number, req: CharacterRequest) =>
+    api.put<CharacterDetailDto>(`/characters/${id}`, req).then(res => res.data)
+
+// 삭제
+export const deleteCharacter = (id: number) =>
+    api.delete(`/characters/${id}`)
