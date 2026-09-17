@@ -91,7 +91,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                                                 boxShadow: selectedClass?.classId === cls.classId ? `0 0 12px ${color.glow}` : 'none'
                                             }}
                                         >
-                                            {cls.iconUrl && <img src={cls.iconUrl} className="w-5 h-5 rounded" />}
+                                            {cls.iconUrl && <img src={cls.iconUrl} alt="" className="w-5 h-5 rounded-full" />}
                                             <span>{cls.name}</span>
                                         </button>
                                     ))}
@@ -106,7 +106,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                 {selectedClass && (
                     <div className="w-72 shrink-0 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         <div className="mb-3 flex items-center gap-2">
-                            {selectedClass.iconUrl && <img src={selectedClass.iconUrl} className="w-8 h-8 rounded" />}
+                            {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-8 h-8 rounded-full" />}
                             <div>
                                 <div className="font-semibold text-sm" style={{ color: color.text }}>{selectedClass.name}</div>
                                 <div className="text-xs text-stone-500">Tier {selectedClass.tier}</div>
