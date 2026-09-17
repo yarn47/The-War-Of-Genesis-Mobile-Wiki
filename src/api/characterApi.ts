@@ -62,6 +62,7 @@ export interface ClassTreeNodeDto {
     passive1Name: string | null
     passive1Lv1: string | null
     passive1Lv2: string | null
+    passive1IconUrl: string | null
     skills: SkillDto[]
 }
 

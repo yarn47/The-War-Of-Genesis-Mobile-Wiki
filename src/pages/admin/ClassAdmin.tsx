@@ -33,7 +33,7 @@ interface StatState {
 }
 
 interface PassiveState {
-    passive1Name: string; passive1Lv1: string; passive1Lv2: string
+    passive1Name: string; passive1Lv1: string; passive1Lv2: string; passive1IconUrl: string
 }
 
 // ─── 기본값 ────────────────────────────────────────────────
@@ -45,7 +45,7 @@ const emptySkill = (): SkillForm => ({
 })
 const emptyBasic = (): BasicState => ({ name: '', tier: '1', parentClassId: '', description: '', iconUrl: '' })
 const emptyStat = (): StatState => ({ weaponType: '', defenseType: 'light', attackRange: '', moveRange: '', baseHp: '', baseAttack: '' })
-const emptyPassive = (): PassiveState => ({ passive1Name: '', passive1Lv1: '', passive1Lv2: '' })
+const emptyPassive = (): PassiveState => ({ passive1Name: '', passive1Lv1: '', passive1Lv2: '', passive1IconUrl: '' })
 
 // ─── 헬퍼 ──────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ const toStr = (v: string) => v.trim() === '' ? null : v.trim()
 const detailToStates = (d: ClassDetailDto) => ({
     basic: { name: d.name, tier: String(d.tier), parentClassId: d.parentClassId != null ? String(d.parentClassId) : '', description: d.description ?? '', iconUrl: d.iconUrl ?? '' },
     stat: { weaponType: d.weaponType ?? '', defenseType: d.defenseType ?? 'light', attackRange: d.attackRange != null ? String(d.attackRange) : '', moveRange: d.moveRange != null ? String(d.moveRange) : '', baseHp: d.baseHp != null ? String(d.baseHp) : '', baseAttack: d.baseAttack != null ? String(d.baseAttack) : '' },
-    passive: { passive1Name: d.passive1Name ?? '', passive1Lv1: d.passive1Lv1 ?? '', passive1Lv2: d.passive1Lv2 ?? '' },
+    passive: { passive1Name: d.passive1Name ?? '', passive1Lv1: d.passive1Lv1 ?? '', passive1Lv2: d.passive1Lv2 ?? '', passive1IconUrl: d.passive1IconUrl ?? '' },
     skills: d.skills.map((s, i) => ({ _key: s.skillId, name: s.name, type: s.type, tpCost: s.tpCost != null ? String(s.tpCost) : '', rangeMin: s.rangeMin != null ? String(s.rangeMin) : '', rangeMax: s.rangeMax != null ? String(s.rangeMax) : '', area: s.area ?? '', cooldown: s.cooldown != null ? String(s.cooldown) : '', effectText: s.effectText ?? '', iconUrl: s.iconUrl ?? '', unlockOrder: String(i + 1), tagIds: s.tags.map(t => t.tagId) }))
 })
 
@@ -65,7 +65,7 @@ const buildRequest = (basic: BasicState, stat: StatState, passive: PassiveState,
     weaponType: toStr(stat.weaponType), defenseType: toStr(stat.defenseType),
     attackRange: toInt(stat.attackRange), moveRange: toInt(stat.moveRange),
     baseHp: toInt(stat.baseHp), baseAttack: toInt(stat.baseAttack),
-    passive1Name: toStr(passive.passive1Name), passive1Lv1: toStr(passive.passive1Lv1), passive1Lv2: toStr(passive.passive1Lv2),
+    passive1Name: toStr(passive.passive1Name), passive1Lv1: toStr(passive.passive1Lv1), passive1Lv2: toStr(passive.passive1Lv2), passive1IconUrl: toStr(passive.passive1IconUrl),
     skills: skills.map((s, i): SkillRequest => ({
         name: s.name, type: s.type, tpCost: toInt(s.tpCost),
         rangeMin: toInt(s.rangeMin), rangeMax: toInt(s.rangeMax),
@@ -222,9 +222,14 @@ const PassiveSection = memo(({ state, onChange, passiveTab, setPassiveTab }: {
                 ))}
             </div>
             <div className="mb-3">
-                <Field label="패시브 이름">
-                    <Input value={state.passive1Name} onChange={e => set('passive1Name', e.target.value)} placeholder="예: 정보 보안" />
-                </Field>
+                <Grid cols={2}>
+                    <Field label="패시브 이름">
+                        <Input value={state.passive1Name} onChange={e => set('passive1Name', e.target.value)} placeholder="예: 정보 보안" />
+                    </Field>
+                    <Field label="패시브 아이콘 URL">
+                        <Input value={state.passive1IconUrl} onChange={e => set('passive1IconUrl', e.target.value)} placeholder="/icons/classes/passive/..." />
+                    </Field>
+                </Grid>
             </div>
             {passiveTab === 1 && (
                 <Field label="패시브 설명">

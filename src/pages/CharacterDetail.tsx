@@ -127,7 +127,10 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                         {selectedClass.passive1Name && (
                             <div className="mb-3">
                                 <div className="mb-1 text-xs font-semibold" style={{ color: color.primary }}>클래스 패시브</div>
-                                <div className="text-xs text-stone-300 font-medium mb-1">{selectedClass.passive1Name}</div>
+                                <div className="mb-1 flex items-center gap-2">
+                                    {selectedClass.passive1IconUrl && <img src={selectedClass.passive1IconUrl} alt="" className="w-6 h-6 rounded" />}
+                                    <span className="text-xs text-stone-300 font-medium">{selectedClass.passive1Name}</span>
+                                </div>
                                 {selectedClass.passive1Lv1 && <div className="text-xs text-stone-400 mb-1">Lv.1 <EffectText text={selectedClass.passive1Lv1} /></div>}
                                 {selectedClass.passive1Lv2 && <div className="text-xs text-stone-400">Lv.2 <EffectText text={selectedClass.passive1Lv2} /></div>}
                             </div>

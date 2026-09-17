@@ -27,6 +27,7 @@ export interface ClassDetailDto {
     passive1Name: string | null
     passive1Lv1: string | null
     passive1Lv2: string | null
+    passive1IconUrl: string | null
     skills: SkillDto[]
 }
 
@@ -59,6 +60,7 @@ export interface ClassRequest {
     passive1Name: string | null
     passive1Lv1: string | null
     passive1Lv2: string | null
+    passive1IconUrl: string | null
     skills: SkillRequest[]
 }
 
