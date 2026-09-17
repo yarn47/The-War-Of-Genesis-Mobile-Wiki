@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCharacterDetail } from '../api/characterApi'
 import type { CharacterDetailDto } from '../api/characterApi'
+import EffectText from '../components/common/EffectText'
+import { getTagColorClass } from '../constants/tagColors'
+import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_STEPS } from '../constants/manifest'
 
 // ─── 속성 색상 ─────────────────────────────────────────────
 
@@ -26,10 +29,8 @@ const FACTION_LABELS: Record<string, string> = {
     astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈'
 }
 
-const PASSIVE_LEVEL_LABELS: Record<string, Record<number, string>> = {
-    awaken: { 3: '각성 3', 4: '각성 4', 5: '각성 5', 6: '각성 6' },
-    manifest: { 2: '발현 2', 4: '발현 4', 6: '발현 6' }
-}
+const passiveLevelLabel = (type: string, step: number) =>
+    PASSIVE_LEVELS.find(l => l.type === type && l.step === step)?.label ?? `${type} ${step}`
 
 // ─── 서브 컴포넌트 ─────────────────────────────────────────
 
@@ -127,8 +128,8 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                             <div className="mb-3">
                                 <div className="mb-1 text-xs font-semibold" style={{ color: color.primary }}>클래스 패시브</div>
                                 <div className="text-xs text-stone-300 font-medium mb-1">{selectedClass.passive1Name}</div>
-                                {selectedClass.passive1Lv1 && <div className="text-xs text-stone-400 mb-1">Lv.1 {selectedClass.passive1Lv1}</div>}
-                                {selectedClass.passive1Lv2 && <div className="text-xs text-stone-400">Lv.2 {selectedClass.passive1Lv2}</div>}
+                                {selectedClass.passive1Lv1 && <div className="text-xs text-stone-400 mb-1">Lv.1 <EffectText text={selectedClass.passive1Lv1} /></div>}
+                                {selectedClass.passive1Lv2 && <div className="text-xs text-stone-400">Lv.2 <EffectText text={selectedClass.passive1Lv2} /></div>}
                             </div>
                         )}
 
@@ -148,7 +149,14 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                                                 {skill.rangeMin != null && <span>사거리 {skill.rangeMin}{skill.rangeMax && skill.rangeMax !== skill.rangeMin ? `~${skill.rangeMax}` : ''}</span>}
                                                 {skill.cooldown != null && <span>쿨타임 {skill.cooldown}턴</span>}
                                             </div>
-                                            {skill.effectText && <div className="mt-1 text-xs text-stone-400">{skill.effectText}</div>}
+                                            {skill.tags.length > 0 && (
+                                                <div className="mt-1 flex flex-wrap gap-1">
+                                                    {skill.tags.map(tag => (
+                                                        <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[10px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {skill.effectText && <div className="mt-1 text-xs text-stone-400"><EffectText text={skill.effectText} /></div>}
                                         </div>
                                     ))}
                                 </div>
@@ -162,104 +170,98 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
 }
 
 // ─── 발현 트리 ─────────────────────────────────────────────
+// 단계 규칙은 constants/manifest.ts (필살기 0/1/3/5 · 패시브 발현 2/4/6 · 아티팩트 3~6)
+
+type ManifestItemType = 'ultimate' | 'passive' | 'artifact'
 
 const ManifestationSection = ({ character, color }: { character: CharacterDetailDto; color: typeof ELEMENT_COLORS[string] }) => {
-    const [selectedItem, setSelectedItem] = useState<{ type: 'ultimate' | 'passive' | 'artifact'; step: number; artifactIdx?: number } | null>(null)
-
-    const MANIFEST_STEPS = [2, 3, 4, 5, 6]
+    const [selectedItem, setSelectedItem] = useState<{ type: ManifestItemType; step: number } | null>(null)
 
     const getUltimateLevel = (step: number) =>
-        character.ultimateSkill?.levels.find(l => l.manifestStep === (step === 2 ? 0 : step === 3 ? 1 : step === 5 ? 3 : 5))
+        character.ultimateSkill?.levels.find(l => l.manifestStep === step)
 
     const getPassiveLevel = (step: number) =>
         character.passive?.levels.find(l => l.unlockType === 'manifest' && l.unlockStep === step)
 
-    const getArtifact = (step: number) =>
-        character.artifacts.find(a => a.levels.some(l => l.manifestStep === step))
+    // 아티팩트는 최대 4개, 각 아티팩트가 단계별 효과를 가짐
+    const getArtifactsAt = (step: number) =>
+        character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
+
+    const isSelected = (type: ManifestItemType, step: number) =>
+        selectedItem?.type === type && selectedItem.step === step
+
+    const toggle = (type: ManifestItemType, step: number) =>
+        setSelectedItem(isSelected(type, step) ? null : { type, step })
+
+    const cellStyle = (type: ManifestItemType, step: number) => ({
+        border: `1px solid ${isSelected(type, step) ? color.primary : color.border}`,
+        background: isSelected(type, step) ? color.bg : 'rgba(0,0,0,0.2)',
+    })
+
+    const EmptyCell = () => (
+        <div className="rounded p-2 text-xs opacity-30" style={{ border: `1px solid ${color.border}` }}>
+            <div className="text-stone-500">-</div>
+        </div>
+    )
 
     return (
         <SectionBox title="발현 트리" color={color}>
             <div className="flex gap-6">
                 {/* 트리 */}
                 <div className="flex-1 space-y-3">
-                    {MANIFEST_STEPS.map(step => (
-                        <div key={step} className="flex items-stretch gap-3">
-                            {/* 단계 표시 */}
-                            <div className="flex items-center justify-center w-12 shrink-0">
-                                <div className="flex flex-col items-center">
-                                    <div className="w-px h-4 bg-stone-700" />
-                                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-                                         style={{ border: `2px solid ${color.primary}`, color: color.text, background: color.bg }}>
-                                        {step}
+                    {MANIFEST_STEPS.map(step => {
+                        const artifacts = getArtifactsAt(step)
+                        return (
+                            <div key={step} className="flex items-stretch gap-3">
+                                {/* 단계 표시 */}
+                                <div className="flex items-center justify-center w-12 shrink-0">
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-px h-4 bg-stone-700" />
+                                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                                             style={{ border: `2px solid ${color.primary}`, color: color.text, background: color.bg }}>
+                                            {step}
+                                        </div>
+                                        <div className="w-px flex-1 bg-stone-700" />
                                     </div>
-                                    <div className="w-px flex-1 bg-stone-700" />
+                                </div>
+
+                                <div className="flex-1 grid grid-cols-2 gap-2">
+                                    {/* 필살기 / 패시브 */}
+                                    {ULTIMATE_STEPS.includes(step) ? (
+                                        <button onClick={() => toggle('ultimate', step)} className="rounded p-2 text-left text-xs" style={cellStyle('ultimate', step)}>
+                                            <div className="text-stone-400 mb-0.5">{step === 0 ? '필살기' : '필살기 강화'}</div>
+                                            <div className="truncate" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '-'}</div>
+                                        </button>
+                                    ) : PASSIVE_MANIFEST_STEPS.includes(step) ? (
+                                        <button onClick={() => toggle('passive', step)} className="rounded p-2 text-left text-xs" style={cellStyle('passive', step)}>
+                                            <div className="text-stone-400 mb-0.5">패시브 강화</div>
+                                            <div className="truncate" style={{ color: color.text }}>{character.passive?.name ?? '-'}</div>
+                                        </button>
+                                    ) : <EmptyCell />}
+
+                                    {/* 아티팩트 */}
+                                    {ARTIFACT_STEPS.includes(step) ? (
+                                        <button onClick={() => toggle('artifact', step)} className="rounded p-2 text-left text-xs" style={cellStyle('artifact', step)}>
+                                            <div className="text-stone-400 mb-0.5">아티팩트{artifacts.length > 1 ? ` ${artifacts.length}개` : ''}</div>
+                                            <div className="truncate" style={{ color: color.text }}>
+                                                {artifacts.length > 0 ? artifacts.map(a => a.name).join(', ') : '-'}
+                                            </div>
+                                        </button>
+                                    ) : <EmptyCell />}
                                 </div>
                             </div>
-
-                            {/* 왼쪽: 스킬/패시브 */}
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                                {/* 필살기 (짝수단: 패시브, 홀수단: 필살기) */}
-                                {(step % 2 === 1 || step === 2) ? (
-                                    <button
-                                        onClick={() => setSelectedItem({ type: 'ultimate', step })}
-                                        className="rounded p-2 text-left text-xs"
-                                        style={{
-                                            border: `1px solid ${selectedItem?.type === 'ultimate' && selectedItem.step === step ? color.primary : color.border}`,
-                                            background: selectedItem?.type === 'ultimate' && selectedItem.step === step ? color.bg : 'rgba(0,0,0,0.2)',
-                                        }}
-                                    >
-                                        <div className="text-stone-400 mb-0.5">필살기 강화</div>
-                                        <div className="truncate" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '-'}</div>
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => setSelectedItem({ type: 'passive', step })}
-                                        className="rounded p-2 text-left text-xs"
-                                        style={{
-                                            border: `1px solid ${selectedItem?.type === 'passive' && selectedItem.step === step ? color.primary : color.border}`,
-                                            background: selectedItem?.type === 'passive' && selectedItem.step === step ? color.bg : 'rgba(0,0,0,0.2)',
-                                        }}
-                                    >
-                                        <div className="text-stone-400 mb-0.5">패시브 강화</div>
-                                        <div className="truncate" style={{ color: color.text }}>{character.passive?.name ?? '-'}</div>
-                                    </button>
-                                )}
-
-                                {/* 아티팩트 */}
-                                {step >= 3 ? (
-                                    <button
-                                        onClick={() => setSelectedItem({ type: 'artifact', step })}
-                                        className="rounded p-2 text-left text-xs"
-                                        style={{
-                                            border: `1px solid ${selectedItem?.type === 'artifact' && selectedItem.step === step ? color.primary : color.border}`,
-                                            background: selectedItem?.type === 'artifact' && selectedItem.step === step ? color.bg : 'rgba(0,0,0,0.2)',
-                                        }}
-                                    >
-                                        <div className="text-stone-400 mb-0.5">아티팩트</div>
-                                        <div className="truncate" style={{ color: color.text }}>
-                                            {character.artifacts.find(a => a.levels.some(l => l.manifestStep === step))?.name ?? '-'}
-                                        </div>
-                                    </button>
-                                ) : (
-                                    <div className="rounded p-2 text-xs opacity-30" style={{ border: `1px solid ${color.border}` }}>
-                                        <div className="text-stone-500">-</div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                        )
+                    })}
                 </div>
 
                 {/* 상세 패널 */}
                 {selectedItem && (
                     <div className="w-72 shrink-0 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
-                        {selectedItem.type === 'ultimate' && character.ultimateSkill && (() => {
-                            const lvl = character.ultimateSkill.levels.find(l =>
-                                l.manifestStep === (selectedItem.step === 2 ? 0 : selectedItem.step === 3 ? 1 : selectedItem.step === 5 ? 3 : 5)
-                            )
+                        {selectedItem.type === 'ultimate' && (() => {
+                            const lvl = getUltimateLevel(selectedItem.step)
                             return (
                                 <>
-                                    <div className="mb-2 font-semibold text-sm" style={{ color: color.text }}>{character.ultimateSkill.name}</div>
+                                    <div className="mb-2 font-semibold text-sm" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '필살기 없음'}</div>
                                     <div className="text-xs text-stone-400 mb-3">발현 {selectedItem.step}단</div>
                                     {lvl ? (
                                         <div className="space-y-2">
@@ -268,32 +270,40 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                                 {lvl.rangeMin != null && <span>사거리 {lvl.rangeMin}{lvl.rangeMax && lvl.rangeMax !== lvl.rangeMin ? `~${lvl.rangeMax}` : ''}</span>}
                                                 {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
                                             </div>
-                                            {lvl.effectText && <div className="text-xs text-stone-300">{lvl.effectText}</div>}
+                                            {lvl.effectText && <div className="text-xs text-stone-300"><EffectText text={lvl.effectText} /></div>}
                                         </div>
                                     ) : <div className="text-xs text-stone-500">효과 없음</div>}
                                 </>
                             )
                         })()}
 
-                        {selectedItem.type === 'passive' && character.passive && (() => {
-                            const lvl = character.passive.levels.find(l => l.unlockType === 'manifest' && l.unlockStep === selectedItem.step)
+                        {selectedItem.type === 'passive' && (() => {
+                            const lvl = getPassiveLevel(selectedItem.step)
                             return (
                                 <>
-                                    <div className="mb-2 font-semibold text-sm" style={{ color: color.text }}>{character.passive.name}</div>
+                                    <div className="mb-2 font-semibold text-sm" style={{ color: color.text }}>{character.passive?.name ?? '패시브 없음'}</div>
                                     <div className="text-xs text-stone-400 mb-3">발현 {selectedItem.step}단</div>
-                                    {lvl?.effectText ? <div className="text-xs text-stone-300">{lvl.effectText}</div> : <div className="text-xs text-stone-500">효과 없음</div>}
+                                    {lvl?.effectText ? <div className="text-xs text-stone-300"><EffectText text={lvl.effectText} /></div> : <div className="text-xs text-stone-500">효과 없음</div>}
                                 </>
                             )
                         })()}
 
                         {selectedItem.type === 'artifact' && (() => {
-                            const art = character.artifacts.find(a => a.levels.some(l => l.manifestStep === selectedItem.step))
-                            const lvl = art?.levels.find(l => l.manifestStep === selectedItem.step)
-                            return art ? (
+                            const artifacts = getArtifactsAt(selectedItem.step)
+                            return artifacts.length > 0 ? (
                                 <>
-                                    <div className="mb-2 font-semibold text-sm" style={{ color: color.text }}>{art.name}</div>
-                                    <div className="text-xs text-stone-400 mb-3">발현 {selectedItem.step}단</div>
-                                    {lvl?.effectText ? <div className="text-xs text-stone-300">{lvl.effectText}</div> : <div className="text-xs text-stone-500">효과 없음</div>}
+                                    <div className="text-xs text-stone-400 mb-3">발현 {selectedItem.step}단 아티팩트</div>
+                                    <div className="space-y-3">
+                                        {artifacts.map(art => {
+                                            const lvl = art.levels.find(l => l.manifestStep === selectedItem.step)
+                                            return (
+                                                <div key={art.artifactId}>
+                                                    <div className="mb-1 font-semibold text-sm" style={{ color: color.text }}>{art.artifactOrder}. {art.name}</div>
+                                                    {lvl?.effectText ? <div className="text-xs text-stone-300"><EffectText text={lvl.effectText} /></div> : <div className="text-xs text-stone-500">효과 없음</div>}
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </>
                             ) : <div className="text-xs text-stone-500">아티팩트 없음</div>
                         })()}
@@ -439,9 +449,9 @@ const CharacterDetail = () => {
                                 <div key={`${lvl.unlockType}_${lvl.unlockStep}`} className="flex gap-3 text-xs">
                                     <span className="shrink-0 rounded px-2 py-0.5 font-bold"
                                           style={{ background: lvl.unlockType === 'awaken' ? 'rgba(59,130,246,0.15)' : color.bg, color: lvl.unlockType === 'awaken' ? '#93C5FD' : color.text }}>
-                                        {PASSIVE_LEVEL_LABELS[lvl.unlockType]?.[lvl.unlockStep] ?? `${lvl.unlockType} ${lvl.unlockStep}`}
+                                        {passiveLevelLabel(lvl.unlockType, lvl.unlockStep)}
                                     </span>
-                                    <span className="text-stone-300 leading-relaxed">{lvl.effectText}</span>
+                                    <EffectText text={lvl.effectText} className="text-stone-300 leading-relaxed" />
                                 </div>
                             ))}
                         </div>
@@ -466,7 +476,7 @@ const CharacterDetail = () => {
                                             {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
                                         </div>
                                     </div>
-                                    {lvl.effectText && <div className="text-xs text-stone-300 leading-relaxed">{lvl.effectText}</div>}
+                                    {lvl.effectText && <div className="text-xs text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
                                 </div>
                             ))}
                         </div>
@@ -488,7 +498,7 @@ const CharacterDetail = () => {
                                                 <span className="shrink-0 rounded px-2 py-0.5 font-bold" style={{ background: color.bg, color: color.text }}>
                                                     발현 {lvl.manifestStep}단
                                                 </span>
-                                                <span className="text-stone-300 leading-relaxed">{lvl.effectText}</span>
+                                                <EffectText text={lvl.effectText} className="text-stone-300 leading-relaxed" />
                                             </div>
                                         ))}
                                     </div>
@@ -511,12 +521,12 @@ const CharacterDetail = () => {
                                 {character.exclusiveWeapon.description && <div className="text-xs text-stone-400 mb-3">{character.exclusiveWeapon.description}</div>}
                                 {character.exclusiveWeapon.effects.map(effect => (
                                     <CollapsibleBox key={effect.effectId} title={effect.effectName} color={color}>
-                                        {effect.baseEffect && <div className="text-xs text-stone-400 mb-2">{effect.baseEffect}</div>}
+                                        {effect.baseEffect && <div className="text-xs text-stone-400 mb-2"><EffectText text={effect.baseEffect} /></div>}
                                         <div className="space-y-1">
                                             {effect.levels.map(lvl => (
                                                 <div key={lvl.breakthroughStep} className="flex gap-2 text-xs">
                                                     <span className="shrink-0 rounded px-1.5 py-0.5 font-bold" style={{ background: color.bg, color: color.text }}>{lvl.breakthroughStep}단</span>
-                                                    <span className="text-stone-300">{lvl.effectText}</span>
+                                                    <EffectText text={lvl.effectText} className="text-stone-300" />
                                                 </div>
                                             ))}
                                         </div>

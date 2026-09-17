@@ -12,20 +12,13 @@ import {
 } from '../../api/characterApi'
 import { searchWeapons, type ExclusiveWeaponDto } from '../../api/itemApi'
 import { getAllClasses, type ClassSummaryDto } from '../../api/classApi'
+import { PASSIVE_LEVELS, ULTIMATE_STEPS, ARTIFACT_STEPS, MAX_ARTIFACTS } from '../../constants/manifest'
 
 // ─── 상수 ──────────────────────────────────────────────────
 
 const GRADES = [{ value: 'rare', label: '희귀' }, { value: 'hero', label: '영웅' }, { value: 'legend', label: '전설' }, { value: 'outer', label: '아우터원' }]
 const FACTIONS = [{ value: 'geysir', label: '게이시르' }, { value: 'pendragon', label: '팬드래건' }, { value: 'independent', label: '무소속' }, { value: 'astania', label: '아스타니아' }, { value: 'zephyrfalcon', label: '제피르팰컨' }, { value: 'dagal', label: '다갈' }]
 const ELEMENTS = [{ value: 'light', label: '신념의빛' }, { value: 'dark', label: '욕망의그림자' }, { value: 'fire', label: '자유의불꽃' }, { value: 'crystal', label: '지성의결정체' }, { value: 'nature', label: '활력의나무' }]
-const PASSIVE_LEVELS = [
-    { type: 'awaken', step: 3, label: '각성 3' }, { type: 'awaken', step: 4, label: '각성 4' },
-    { type: 'awaken', step: 5, label: '각성 5' }, { type: 'awaken', step: 6, label: '각성 6' },
-    { type: 'manifest', step: 2, label: '발현 2' }, { type: 'manifest', step: 4, label: '발현 4' },
-    { type: 'manifest', step: 6, label: '발현 6' },
-]
-const ULTIMATE_STEPS = [0, 1, 3, 5]
-const ARTIFACT_STEPS = [3, 4, 5, 6]
 
 // ─── 섹션별 state 타입 ─────────────────────────────────────
 
@@ -426,8 +419,8 @@ const ArtifactSection = memo(({ artifacts, onChange }: { artifacts: ArtifactForm
                     </ItemBox>
                 ))}
             </div>
-            {artifacts.length < 4 && (
-                <AddBtn onClick={() => onChange([...artifacts, emptyArtifact()])} label="아티팩트 추가 (최대 4개)" />
+            {artifacts.length < MAX_ARTIFACTS && (
+                <AddBtn onClick={() => onChange([...artifacts, emptyArtifact()])} label={`아티팩트 추가 (최대 ${MAX_ARTIFACTS}개)`} />
             )}
         </Section>
     )
