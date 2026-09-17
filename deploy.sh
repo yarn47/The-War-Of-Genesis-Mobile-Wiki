@@ -3,8 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
+# 기본은 같은 도메인의 /api (Caddy가 /api/* 를 백엔드 8080으로 전달)
 # 다른 주소로 빌드하려면: VITE_API_URL=https://... ./deploy.sh
-API_URL="${VITE_API_URL:-http://64.176.231.172:8080/api}"
+API_URL="${VITE_API_URL:-/api}"
 echo "API 주소: $API_URL"
 
 docker build --build-arg VITE_API_URL="$API_URL" -t genesis-wiki .
