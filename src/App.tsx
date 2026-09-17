@@ -6,6 +6,7 @@ import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import CharacterDetail from './pages/CharacterDetail'
 import CharacterList from './pages/CharacterList'
+import Login from './pages/Login'
 import AdminHome from './pages/admin/AdminHome'
 import CharacterAdmin from './pages/admin/CharacterAdmin'
 import ClassAdmin from './pages/admin/ClassAdmin'
@@ -41,12 +42,13 @@ function App() {
                 <div className="relative z-10 flex min-h-screen flex-col">
                     <Header theme={theme} setTheme={setTheme} isAdmin={isAdmin} setIsAdmin={setIsAdmin} />
                     <div className="flex flex-1">
-                        <Sidebar />
+                        <Sidebar isAdmin={isAdmin} />
                         <Routes>
                             {/* 공개 */}
                             <Route path="/" element={<Home />} />
                             <Route path="/characters" element={<CharacterList />} />
                             <Route path="/characters/:id" element={<CharacterDetail />} />
+                            <Route path="/login" element={<Login onLogin={() => setIsAdmin(true)} />} />
 
                             {/* 관리자 */}
                             <Route path="/admin" element={<AdminRoute isAdmin={isAdmin}><AdminHome /></AdminRoute>} />

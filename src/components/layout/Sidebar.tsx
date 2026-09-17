@@ -5,7 +5,7 @@ const navItems = [
         label: '메뉴',
         items: [
             { name: '홈', href: '/' },
-            { name: '캐릭터', href: '/character' },
+            { name: '캐릭터', href: '/characters' },
             { name: '스토리', href: '/story' },
             { name: '시스템', href: '/system' },
             { name: '장비', href: '/equipment' },
@@ -22,6 +22,7 @@ const navItems = [
     },
     {
         label: '관리자',
+        adminOnly: true,
         items: [
             { name: '캐릭터 관리', href: '/admin/character' },
             { name: '클래스 관리', href: '/admin/class' },
@@ -31,12 +32,12 @@ const navItems = [
     }
 ]
 
-const Sidebar = () => {
+const Sidebar = ({ isAdmin }: { isAdmin: boolean | null }) => {
     const location = useLocation()
 
     return (
         <aside className="sticky top-[60px] h-[calc(100vh-60px)] w-48 flex-shrink-0 overflow-y-auto border-r border-[var(--card-border)] theme-sidebar py-5">
-            {navItems.map((section) => (
+            {navItems.filter(section => !section.adminOnly || isAdmin).map((section) => (
                 <div key={section.label} className="mb-5">
                     <div className="mb-1.5 flex items-center gap-2 px-4">
                         <div className="h-px flex-1 bg-[var(--card-border)]" />

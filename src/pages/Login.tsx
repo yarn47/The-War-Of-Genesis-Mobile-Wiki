@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../api/authApi'
 
-const Login = () => {
+const Login = ({ onLogin }: { onLogin: () => void }) => {
     const navigate = useNavigate()
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
@@ -16,6 +16,7 @@ const Login = () => {
         try {
             const res = await login(username, password)
             if (res.success) {
+                onLogin()
                 navigate('/admin')
             } else {
                 setError(res.message)
