@@ -8,6 +8,8 @@ import {
     getAllClasses, getClassDetail, createClass, updateClass, deleteClass,
     type ClassSummaryDto, type ClassDetailDto, type ClassRequest, type SkillRequest
 } from '../../api/classApi'
+import { getTagList, type TagDto } from '../../api/buffApi'
+import { getTagColorClass } from '../../constants/tagColors'
 
 // ─── 타입 ──────────────────────────────────────────────────
 
@@ -16,6 +18,7 @@ interface SkillForm {
     name: string; type: string; tpCost: string
     rangeMin: string; rangeMax: string; area: string
     cooldown: string; effectText: string; iconUrl: string; unlockOrder: string
+    tagIds: number[]
 }
 
 interface BasicState {
@@ -38,7 +41,7 @@ interface PassiveState {
 const emptySkill = (): SkillForm => ({
     _key: Date.now() + Math.random(),
     name: '', type: 'active', tpCost: '', rangeMin: '', rangeMax: '',
-    area: '', cooldown: '', effectText: '', iconUrl: '', unlockOrder: ''
+    area: '', cooldown: '', effectText: '', iconUrl: '', unlockOrder: '', tagIds: []
 })
 const emptyBasic = (): BasicState => ({ name: '', tier: '1', parentClassId: '', description: '', iconUrl: '' })
 const emptyStat = (): StatState => ({ weaponType: '', defenseType: 'light', attackRange: '', moveRange: '', baseHp: '', baseAttack: '' })
@@ -53,7 +56,7 @@ const detailToStates = (d: ClassDetailDto) => ({
     basic: { name: d.name, tier: String(d.tier), parentClassId: d.parentClassId != null ? String(d.parentClassId) : '', description: d.description ?? '', iconUrl: d.iconUrl ?? '' },
     stat: { weaponType: d.weaponType ?? '', defenseType: d.defenseType ?? 'light', attackRange: d.attackRange != null ? String(d.attackRange) : '', moveRange: d.moveRange != null ? String(d.moveRange) : '', baseHp: d.baseHp != null ? String(d.baseHp) : '', baseAttack: d.baseAttack != null ? String(d.baseAttack) : '' },
     passive: { passive1Name: d.passive1Name ?? '', passive1Lv1: d.passive1Lv1 ?? '', passive1Lv2: d.passive1Lv2 ?? '' },
-    skills: d.skills.map((s, i) => ({ _key: s.skillId, name: s.name, type: s.type, tpCost: s.tpCost != null ? String(s.tpCost) : '', rangeMin: s.rangeMin != null ? String(s.rangeMin) : '', rangeMax: s.rangeMax != null ? String(s.rangeMax) : '', area: s.area ?? '', cooldown: s.cooldown != null ? String(s.cooldown) : '', effectText: s.effectText ?? '', iconUrl: s.iconUrl ?? '', unlockOrder: String(i + 1) }))
+    skills: d.skills.map((s, i) => ({ _key: s.skillId, name: s.name, type: s.type, tpCost: s.tpCost != null ? String(s.tpCost) : '', rangeMin: s.rangeMin != null ? String(s.rangeMin) : '', rangeMax: s.rangeMax != null ? String(s.rangeMax) : '', area: s.area ?? '', cooldown: s.cooldown != null ? String(s.cooldown) : '', effectText: s.effectText ?? '', iconUrl: s.iconUrl ?? '', unlockOrder: String(i + 1), tagIds: s.tags.map(t => t.tagId) }))
 })
 
 const buildRequest = (basic: BasicState, stat: StatState, passive: PassiveState, skills: SkillForm[]): ClassRequest => ({
@@ -68,7 +71,8 @@ const buildRequest = (basic: BasicState, stat: StatState, passive: PassiveState,
         rangeMin: toInt(s.rangeMin), rangeMax: toInt(s.rangeMax),
         area: toStr(s.area), cooldown: toInt(s.cooldown),
         effectText: toStr(s.effectText), iconUrl: toStr(s.iconUrl),
-        unlockOrder: toInt(s.unlockOrder) ?? (i + 1)
+        unlockOrder: toInt(s.unlockOrder) ?? (i + 1),
+        tagIds: s.tagIds
     }))
 })
 
@@ -139,9 +143,13 @@ const StatSection = memo(({ state, onChange }: { state: StatState; onChange: (s:
     )
 })
 
-const SkillSection = memo(({ skills, onChange }: { skills: SkillForm[]; onChange: (s: SkillForm[]) => void }) => {
+const SkillSection = memo(({ skills, tagList, onChange }: { skills: SkillForm[]; tagList: TagDto[]; onChange: (s: SkillForm[]) => void }) => {
     const update = (key: number, field: keyof SkillForm, val: string) =>
         onChange(skills.map(s => s._key === key ? { ...s, [field]: val } : s))
+    const toggleTag = (key: number, tagId: number) =>
+        onChange(skills.map(s => s._key !== key ? s : {
+            ...s, tagIds: s.tagIds.includes(tagId) ? s.tagIds.filter(id => id !== tagId) : [...s.tagIds, tagId]
+        }))
     return (
         <Section title="③ 습득 스킬 (액티브)">
             <div className="space-y-3">
@@ -176,6 +184,19 @@ const SkillSection = memo(({ skills, onChange }: { skills: SkillForm[]; onChange
                         <div className="mt-3">
                             <Field label="효과 설명">
                                 <Textarea rows={2} value={skill.effectText} onChange={e => update(skill._key, 'effectText', e.target.value)} placeholder="[150%]{red} 물리 피해..." />
+                            </Field>
+                        </div>
+                        <div className="mt-3">
+                            <Field label="태그">
+                                <div className="flex flex-wrap gap-1.5">
+                                    {tagList.length === 0 && <span className="text-xs text-[var(--text-muted)]">등록된 태그 없음 (버프/디버프 관리 → 태그)</span>}
+                                    {tagList.map(tag => (
+                                        <button key={tag.tagId} type="button" onClick={() => toggleTag(skill._key, tag.tagId)}
+                                                className={`rounded px-2.5 py-1 text-xs ${skill.tagIds.includes(tag.tagId) ? getTagColorClass(tag.color) : 'bg-stone-800/60 text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+                                            {tag.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </Field>
                         </div>
                     </ItemBox>
@@ -232,12 +253,16 @@ const ClassAdmin = () => {
     const [stat, setStat] = useState<StatState>(emptyStat())
     const [passive, setPassive] = useState<PassiveState>(emptyPassive())
     const [skills, setSkills] = useState<SkillForm[]>([emptySkill()])
+    const [tagList, setTagList] = useState<TagDto[]>([])
 
     const loadList = useCallback(() => {
         getAllClasses().then(setClassList).catch(() => show('목록 로드 실패', 'error'))
     }, [])
 
-    useEffect(() => { loadList() }, [])
+    useEffect(() => {
+        loadList()
+        getTagList().then(setTagList).catch(() => show('태그 로드 실패', 'error'))
+    }, [])
 
     const resetAll = useCallback(() => {
         setEditingId(null)
@@ -324,7 +349,7 @@ const ClassAdmin = () => {
 
                 <BasicSection state={basic} onChange={setBasic} />
                 <StatSection state={stat} onChange={setStat} />
-                <SkillSection skills={skills} onChange={setSkills} />
+                <SkillSection skills={skills} tagList={tagList} onChange={setSkills} />
                 <PassiveSection state={passive} onChange={setPassive} passiveTab={passiveTab} setPassiveTab={setPassiveTab} />
 
                 <div className="mb-8 flex justify-end gap-2">

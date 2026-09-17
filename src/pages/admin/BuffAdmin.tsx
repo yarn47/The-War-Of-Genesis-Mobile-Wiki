@@ -5,18 +5,7 @@ import { getBuffList, getDebuffList, getTagList, createBuff, createDebuff, creat
     type BuffDto, type DebuffDto, type TagDto, type BuffRequest,
     type TagRequest } from '../../api/buffApi'
 import { useToast } from '../../components/common/Toast'
-
-const TAG_COLORS = [
-    { value: 'gray', label: '회색', class: 'bg-stone-700 text-stone-300' },
-    { value: 'red', label: '빨강', class: 'bg-red-900/60 text-red-300' },
-    { value: 'blue', label: '파랑', class: 'bg-blue-900/60 text-blue-300' },
-    { value: 'green', label: '초록', class: 'bg-green-900/60 text-green-300' },
-    { value: 'yellow', label: '노랑', class: 'bg-yellow-900/60 text-yellow-300' },
-    { value: 'purple', label: '보라', class: 'bg-purple-900/60 text-purple-300' },
-]
-
-const getTagColorClass = (color: string) =>
-    TAG_COLORS.find(c => c.value === color)?.class ?? 'bg-stone-700 text-stone-300'
+import { TAG_COLORS, getTagColorClass } from '../../constants/tagColors'
 
 type LevelState = {
     level: number

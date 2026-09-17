@@ -1,5 +1,5 @@
 import api from './api'
-import type {BuffDto, DebuffDto} from './buffApi'
+import type {BuffDto, DebuffDto, TagDto} from './buffApi'
 
 export interface CharacterSummaryDto {
     characterId: number
@@ -43,6 +43,7 @@ export interface SkillDto {
     cooldown: number | null
     effectText: string | null
     iconUrl: string | null
+    tags: TagDto[]
 }
 
 export interface ClassTreeNodeDto {

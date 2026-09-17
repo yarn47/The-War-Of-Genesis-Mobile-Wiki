@@ -41,6 +41,7 @@ export interface SkillRequest {
     effectText: string | null
     iconUrl: string | null
     unlockOrder: number | null
+    tagIds: number[]
 }
 
 export interface ClassRequest {
