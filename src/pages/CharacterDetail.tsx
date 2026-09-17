@@ -29,6 +29,8 @@ const FACTION_LABELS: Record<string, string> = {
     astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈'
 }
 
+const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
+
 const passiveLevelLabel = (type: string, step: number) =>
     PASSIVE_LEVELS.find(l => l.type === type && l.step === step)?.label ?? `${type} ${step}`
 
@@ -116,7 +118,8 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                         {/* 스탯 */}
                         <div className="mb-3 grid grid-cols-2 gap-1 text-xs">
                             {selectedClass.weaponType && <div className="text-stone-400">사용무기 <span className="text-stone-200">{selectedClass.weaponType}</span></div>}
-                            {selectedClass.defenseType && <div className="text-stone-400">방어타입 <span className="text-stone-200">{selectedClass.defenseType}</span></div>}
+                            {selectedClass.defenseType && <div className="text-stone-400">방어타입 <span className="text-stone-200">{DEFENSE_LABELS[selectedClass.defenseType] ?? selectedClass.defenseType}</span></div>}
+                            {selectedClass.attackType && <div className="text-stone-400">공격타입 <span className="text-stone-200">{selectedClass.attackType}</span></div>}
                             {selectedClass.attackRange != null && <div className="text-stone-400">공격사거리 <span className="text-stone-200">{selectedClass.attackRange}</span></div>}
                             {selectedClass.moveRange != null && <div className="text-stone-400">이동거리 <span className="text-stone-200">{selectedClass.moveRange}</span></div>}
                             {selectedClass.baseHp != null && <div className="text-stone-400">체력 <span className="text-stone-200">{selectedClass.baseHp.toLocaleString()}</span></div>}
@@ -148,9 +151,14 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                                                 <span className="text-xs font-medium text-stone-200">{skill.name}</span>
                                             </div>
                                             <div className="flex gap-3 text-xs text-stone-500">
-                                                {skill.tpCost != null && <span>TP {skill.tpCost}</span>}
-                                                {skill.rangeMin != null && <span>사거리 {skill.rangeMin}{skill.rangeMax && skill.rangeMax !== skill.rangeMin ? `~${skill.rangeMax}` : ''}</span>}
+                                                <span>TP {skill.tpCost ?? '-'}</span>
+                                                {skill.rangeMin != null && <span>사거리 {skill.rangeMin === 0 && skill.rangeMax === 0 ? '자신' : `${skill.rangeMin}-${skill.rangeMax ?? skill.rangeMin}`}</span>}
+                                                {skill.area && <span>{skill.area}</span>}
                                                 {skill.cooldown != null && <span>쿨타임 {skill.cooldown}턴</span>}
+                                            </div>
+                                            <div className="flex flex-wrap gap-3 text-xs text-stone-500">
+                                                {(skill.attackType ?? selectedClass.attackType) && <span>공격타입 {skill.attackType ?? selectedClass.attackType}</span>}
+                                                {skill.allowedWeapon && <span className="text-red-300/80">허용 무기: {skill.allowedWeapon}</span>}
                                             </div>
                                             {skill.tags.length > 0 && (
                                                 <div className="mt-1 flex flex-wrap gap-1">

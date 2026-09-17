@@ -17,6 +17,7 @@ export interface ClassDetailDto {
     tier: number
     weaponType: string | null
     defenseType: string | null
+    attackType: string | null
     attackRange: number | null
     moveRange: number | null
     baseHp: number | null
@@ -38,6 +39,8 @@ export interface SkillRequest {
     rangeMin: number | null
     rangeMax: number | null
     area: string | null
+    attackType: string | null
+    allowedWeapon: string | null
     cooldown: number | null
     effectText: string | null
     iconUrl: string | null
@@ -50,6 +53,7 @@ export interface ClassRequest {
     tier: number
     weaponType: string | null
     defenseType: string | null
+    attackType: string | null
     attackRange: number | null
     moveRange: number | null
     baseHp: number | null

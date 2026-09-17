@@ -17,6 +17,7 @@ interface SkillForm {
     _key: number
     name: string; type: string; tpCost: string
     rangeMin: string; rangeMax: string; area: string
+    attackType: string; allowedWeapon: string
     cooldown: string; effectText: string; iconUrl: string; unlockOrder: string
     tagIds: number[]
 }
@@ -27,7 +28,7 @@ interface BasicState {
 }
 
 interface StatState {
-    weaponType: string; defenseType: string
+    weaponType: string; defenseType: string; attackType: string
     attackRange: string; moveRange: string
     baseHp: string; baseAttack: string
 }
@@ -41,10 +42,10 @@ interface PassiveState {
 const emptySkill = (): SkillForm => ({
     _key: Date.now() + Math.random(),
     name: '', type: 'active', tpCost: '', rangeMin: '', rangeMax: '',
-    area: '', cooldown: '', effectText: '', iconUrl: '', unlockOrder: '', tagIds: []
+    area: '', attackType: '', allowedWeapon: '', cooldown: '', effectText: '', iconUrl: '', unlockOrder: '', tagIds: []
 })
 const emptyBasic = (): BasicState => ({ name: '', tier: '1', parentClassId: '', description: '', iconUrl: '' })
-const emptyStat = (): StatState => ({ weaponType: '', defenseType: 'light', attackRange: '', moveRange: '', baseHp: '', baseAttack: '' })
+const emptyStat = (): StatState => ({ weaponType: '', defenseType: 'light', attackType: '', attackRange: '', moveRange: '', baseHp: '', baseAttack: '' })
 const emptyPassive = (): PassiveState => ({ passive1Name: '', passive1Lv1: '', passive1Lv2: '', passive1IconUrl: '' })
 
 // ─── 헬퍼 ──────────────────────────────────────────────────
@@ -54,22 +55,22 @@ const toStr = (v: string) => v.trim() === '' ? null : v.trim()
 
 const detailToStates = (d: ClassDetailDto) => ({
     basic: { name: d.name, tier: String(d.tier), parentClassId: d.parentClassId != null ? String(d.parentClassId) : '', description: d.description ?? '', iconUrl: d.iconUrl ?? '' },
-    stat: { weaponType: d.weaponType ?? '', defenseType: d.defenseType ?? 'light', attackRange: d.attackRange != null ? String(d.attackRange) : '', moveRange: d.moveRange != null ? String(d.moveRange) : '', baseHp: d.baseHp != null ? String(d.baseHp) : '', baseAttack: d.baseAttack != null ? String(d.baseAttack) : '' },
+    stat: { weaponType: d.weaponType ?? '', defenseType: d.defenseType ?? 'light', attackType: d.attackType ?? '', attackRange: d.attackRange != null ? String(d.attackRange) : '', moveRange: d.moveRange != null ? String(d.moveRange) : '', baseHp: d.baseHp != null ? String(d.baseHp) : '', baseAttack: d.baseAttack != null ? String(d.baseAttack) : '' },
     passive: { passive1Name: d.passive1Name ?? '', passive1Lv1: d.passive1Lv1 ?? '', passive1Lv2: d.passive1Lv2 ?? '', passive1IconUrl: d.passive1IconUrl ?? '' },
-    skills: d.skills.map((s, i) => ({ _key: s.skillId, name: s.name, type: s.type, tpCost: s.tpCost != null ? String(s.tpCost) : '', rangeMin: s.rangeMin != null ? String(s.rangeMin) : '', rangeMax: s.rangeMax != null ? String(s.rangeMax) : '', area: s.area ?? '', cooldown: s.cooldown != null ? String(s.cooldown) : '', effectText: s.effectText ?? '', iconUrl: s.iconUrl ?? '', unlockOrder: String(i + 1), tagIds: s.tags.map(t => t.tagId) }))
+    skills: d.skills.map((s, i) => ({ _key: s.skillId, name: s.name, type: s.type, tpCost: s.tpCost != null ? String(s.tpCost) : '', rangeMin: s.rangeMin != null ? String(s.rangeMin) : '', rangeMax: s.rangeMax != null ? String(s.rangeMax) : '', area: s.area ?? '', attackType: s.attackType ?? '', allowedWeapon: s.allowedWeapon ?? '', cooldown: s.cooldown != null ? String(s.cooldown) : '', effectText: s.effectText ?? '', iconUrl: s.iconUrl ?? '', unlockOrder: String(i + 1), tagIds: s.tags.map(t => t.tagId) }))
 })
 
 const buildRequest = (basic: BasicState, stat: StatState, passive: PassiveState, skills: SkillForm[]): ClassRequest => ({
     name: basic.name, tier: parseInt(basic.tier),
     parentClassId: toInt(basic.parentClassId), description: toStr(basic.description), iconUrl: toStr(basic.iconUrl),
-    weaponType: toStr(stat.weaponType), defenseType: toStr(stat.defenseType),
+    weaponType: toStr(stat.weaponType), defenseType: toStr(stat.defenseType), attackType: toStr(stat.attackType),
     attackRange: toInt(stat.attackRange), moveRange: toInt(stat.moveRange),
     baseHp: toInt(stat.baseHp), baseAttack: toInt(stat.baseAttack),
     passive1Name: toStr(passive.passive1Name), passive1Lv1: toStr(passive.passive1Lv1), passive1Lv2: toStr(passive.passive1Lv2), passive1IconUrl: toStr(passive.passive1IconUrl),
     skills: skills.map((s, i): SkillRequest => ({
         name: s.name, type: s.type, tpCost: toInt(s.tpCost),
         rangeMin: toInt(s.rangeMin), rangeMax: toInt(s.rangeMax),
-        area: toStr(s.area), cooldown: toInt(s.cooldown),
+        area: toStr(s.area), attackType: toStr(s.attackType), allowedWeapon: toStr(s.allowedWeapon), cooldown: toInt(s.cooldown),
         effectText: toStr(s.effectText), iconUrl: toStr(s.iconUrl),
         unlockOrder: toInt(s.unlockOrder) ?? (i + 1),
         tagIds: s.tagIds
@@ -130,7 +131,10 @@ const StatSection = memo(({ state, onChange }: { state: StatState; onChange: (s:
                 </Field>
             </Grid>
             <div className="mt-3">
-                <Grid cols={2}>
+                <Grid cols={3}>
+                    <Field label="공격 타입">
+                        <Input value={state.attackType} onChange={e => set('attackType', e.target.value)} placeholder="관통 / 타격" />
+                    </Field>
                     <Field label="최대 체력">
                         <Input type="number" value={state.baseHp} onChange={e => set('baseHp', e.target.value)} placeholder="8964" />
                     </Field>
@@ -176,8 +180,10 @@ const SkillSection = memo(({ skills, tagList, onChange }: { skills: SkillForm[];
                             </Grid>
                         </div>
                         <div className="mt-3">
-                            <Grid cols={2}>
-                                <Field label="범위"><Input value={skill.area} onChange={e => update(skill._key, 'area', e.target.value)} placeholder="단일 / 직선 / 범위" /></Field>
+                            <Grid cols={4}>
+                                <Field label="범위"><Input value={skill.area} onChange={e => update(skill._key, 'area', e.target.value)} placeholder="단일 / 광역" /></Field>
+                                <Field label="공격 타입"><Input value={skill.attackType} onChange={e => update(skill._key, 'attackType', e.target.value)} placeholder="클래스와 다를 때만" /></Field>
+                                <Field label="허용 무기"><Input value={skill.allowedWeapon} onChange={e => update(skill._key, 'allowedWeapon', e.target.value)} placeholder="예: 쌍수단검" /></Field>
                                 <Field label="순서"><Input type="number" value={skill.unlockOrder} onChange={e => update(skill._key, 'unlockOrder', e.target.value)} placeholder="1" /></Field>
                             </Grid>
                         </div>
