@@ -19,3 +19,7 @@ export const PASSIVE_MANIFEST_STEPS = PASSIVE_LEVELS.filter(l => l.type === 'man
 
 // 발현 트리에 표시할 전체 단계
 export const MANIFEST_STEPS = [...new Set([...ULTIMATE_STEPS, ...PASSIVE_MANIFEST_STEPS, ...ARTIFACT_STEPS])].sort((a, b) => a - b)
+
+// 능력치 강화: 발현 1·2단 (효과 설명이 따로 없어 문구만 표시)
+export const STAT_BOOST_STEPS = [1, 2]
+export const STAT_BOOST_TEXT = '능력치를 강화합니다.'

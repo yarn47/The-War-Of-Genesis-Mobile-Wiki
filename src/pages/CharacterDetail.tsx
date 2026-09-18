@@ -6,7 +6,7 @@ import EffectText from '../components/common/EffectText'
 import { EffectDictProvider } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
 import WeaponInfo from '../components/common/WeaponInfo'
-import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_STEPS } from '../constants/manifest'
+import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_STEPS, STAT_BOOST_STEPS, STAT_BOOST_TEXT } from '../constants/manifest'
 
 // ─── 속성 색상 ─────────────────────────────────────────────
 
@@ -283,13 +283,23 @@ const ActiveSkillSection = ({ classTree, color }: { classTree: ClassTreeNodeDto[
 }
 
 // ─── 발현 트리 ─────────────────────────────────────────────
-// 단계 규칙은 constants/manifest.ts (필살기 0/1/3/5 · 패시브 발현 2/4/6 · 아티팩트 3~6)
+// 게임 발현 화면과 같은 배치: 필살기 | 고유 패시브 | 능력치 강화·아티팩트
+// 단계 규칙은 constants/manifest.ts (필살기 0/1/3/5 · 패시브 2/4/6 · 아티팩트 3~6 · 능력치 1/2)
 
-type ManifestItemType = 'ultimate' | 'passive' | 'artifact'
+type ManifestItemType = 'ultimate' | 'passive' | 'stat' | 'artifact'
+type ManifestNode = { type: ManifestItemType; step: number; col: number }
+
+const MANIFEST_LABELS: Record<ManifestItemType, string> = {
+    ultimate: '필살기', passive: '고유 패시브', stat: '능력치 강화', artifact: '아티팩트',
+}
+
+const MANIFEST_ICON = 56
+const MANIFEST_COL_W = 116
+const MANIFEST_ROW_H = 92
+const MANIFEST_GUTTER = 48   // 왼쪽 단계 번호 자리
+const MANIFEST_LINE = '#FBBF24'
 
 const ManifestationSection = ({ character, color }: { character: CharacterDetailDto; color: ElementColor }) => {
-    const [selectedItem, setSelectedItem] = useState<{ type: ManifestItemType; step: number } | null>(null)
-
     const getUltimateLevel = (step: number) =>
         character.ultimateSkill?.levels.find(l => l.manifestStep === step)
 
@@ -300,25 +310,65 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
     const getArtifactsAt = (step: number) =>
         character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
 
-    const isSelected = (type: ManifestItemType, step: number) =>
-        selectedItem?.type === type && selectedItem.step === step
+    const nodes: ManifestNode[] = [
+        ...ULTIMATE_STEPS.map(step => ({ type: 'ultimate' as const, step, col: 0 })),
+        ...PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: 1 })),
+        ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: 2 })),
+        ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: 2 })),
+    ]
 
-    const toggle = (type: ManifestItemType, step: number) =>
-        setSelectedItem(isSelected(type, step) ? null : { type, step })
+    const [selected, setSelected] = useState<ManifestNode>(nodes[0])
 
-    const cellStyle = (type: ManifestItemType, step: number) => ({
-        border: `1px solid ${isSelected(type, step) ? color.primary : color.border}`,
-        background: isSelected(type, step) ? color.bg : 'rgba(0,0,0,0.2)',
+    const pos = (node: ManifestNode) => ({
+        x: MANIFEST_GUTTER + node.col * MANIFEST_COL_W + MANIFEST_ICON / 2,
+        y: MANIFEST_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
     })
 
-    const EmptyCell = () => (
-        <div className="rounded p-2.5 text-sm opacity-30" style={{ border: `1px solid ${color.border}` }}>
-            <div className="text-stone-500">-</div>
-        </div>
-    )
+    // 같은 열은 세로로, 새 갈래가 시작될 때는 대각선으로 (게임 트리와 동일)
+    const links: [ManifestNode, ManifestNode][] = []
+    ;[0, 1, 2].forEach(col => {
+        const inCol = nodes.filter(n => n.col === col).sort((a, b) => a.step - b.step)
+        inCol.forEach((n, i) => { if (i > 0) links.push([inCol[i - 1], n]) })
+    })
+    const firstOf = (type: ManifestItemType) => nodes.filter(n => n.type === type).sort((a, b) => a.step - b.step)[0]
+    const lastBefore = (type: ManifestItemType, step: number) =>
+        nodes.filter(n => n.type === type && n.step < step).sort((a, b) => b.step - a.step)[0]
 
-    // 선택한 칸 바로 아래에 상세를 펼친다
-    const renderDetail = (type: ManifestItemType, step: number) => {
+    const passiveHead = firstOf('passive')
+    const artifactHead = firstOf('artifact')
+    if (passiveHead) {
+        const from = lastBefore('ultimate', passiveHead.step)
+        if (from) links.push([from, passiveHead])
+    }
+    if (artifactHead) {
+        const from = lastBefore('passive', artifactHead.step)
+        if (from) links.push([from, artifactHead])
+    }
+
+    const width = MANIFEST_GUTTER + 3 * MANIFEST_COL_W
+    const height = (MANIFEST_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 26
+
+    const nodeIcon = (node: ManifestNode) => {
+        if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl
+        if (node.type === 'passive') return character.passive?.iconUrl
+        if (node.type === 'artifact') return getArtifactsAt(node.step).find(a => a.iconUrl)?.iconUrl
+        return null
+    }
+
+    const isSelected = (node: ManifestNode) => selected.type === node.type && selected.step === node.step
+
+    // 오른쪽 상세
+    const renderDetail = () => {
+        const { type, step } = selected
+
+        if (type === 'stat') return (
+            <>
+                <div className="mb-2 font-semibold text-base" style={{ color: color.text }}>능력치 강화</div>
+                <div className="text-sm text-stone-400 mb-3">발현 {step}단</div>
+                <div className="text-sm text-stone-300">{STAT_BOOST_TEXT}</div>
+            </>
+        )
+
         if (type === 'ultimate') {
             const lvl = getUltimateLevel(step)
             return (
@@ -384,70 +434,75 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
 
     return (
         <SectionBox title="발현 트리" color={color}>
-            <div className="space-y-2">
-                {MANIFEST_STEPS.map(step => {
-                    const artifacts = getArtifactsAt(step)
-                    return (
-                        <div key={step}>
-                            <div className="flex items-stretch gap-3">
-                                {/* 단계 표시 */}
-                                <div className="flex items-center justify-center w-14 shrink-0">
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-px h-4 bg-stone-700" />
-                                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
-                                             style={{ border: `2px solid ${color.primary}`, color: color.text, background: color.bg }}>
-                                            {step}
-                                        </div>
-                                        <div className="w-px flex-1 bg-stone-700" />
-                                    </div>
-                                </div>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+                {/* 트리 */}
+                <div className="overflow-x-auto pb-2 lg:shrink-0">
+                    <div className="relative" style={{ width, height }}>
+                        <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
+                            {/* 단계 구분선 */}
+                            {MANIFEST_STEPS.map((step, i) => (
+                                <line key={`row_${step}`} x1={0} y1={i * MANIFEST_ROW_H - 13} x2={width} y2={i * MANIFEST_ROW_H - 13}
+                                      stroke="#78716C" strokeWidth={1} strokeOpacity={0.25} />
+                            ))}
+                            {links.map(([from, to], i) => {
+                                const a = pos(from), b = pos(to)
+                                return (
+                                    <line key={i} x1={a.x} y1={a.y + MANIFEST_ICON} x2={b.x} y2={b.y}
+                                          stroke={MANIFEST_LINE} strokeWidth={2} strokeOpacity={0.8} strokeLinecap="round" />
+                                )
+                            })}
+                        </svg>
 
-                                <div className="flex-1 grid grid-cols-2 gap-2">
-                                    {/* 필살기 / 패시브 */}
-                                    {ULTIMATE_STEPS.includes(step) ? (
-                                        <button type="button" onClick={() => toggle('ultimate', step)} className="rounded p-2.5 text-left text-sm" style={cellStyle('ultimate', step)}>
-                                            <div className="text-stone-400 mb-0.5 text-xs">{step === 0 ? '필살기' : '필살기 강화'}</div>
-                                            <div className="flex items-center gap-2">
-                                                {character.ultimateSkill?.iconUrl && <img src={character.ultimateSkill.iconUrl} alt="" className="w-7 h-7 rounded shrink-0" />}
-                                                <span className="truncate" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '-'}</span>
-                                            </div>
-                                        </button>
-                                    ) : PASSIVE_MANIFEST_STEPS.includes(step) ? (
-                                        <button type="button" onClick={() => toggle('passive', step)} className="rounded p-2.5 text-left text-sm" style={cellStyle('passive', step)}>
-                                            <div className="text-stone-400 mb-0.5 text-xs">패시브 강화</div>
-                                            <div className="flex items-center gap-2">
-                                                {character.passive?.iconUrl && <img src={character.passive.iconUrl} alt="" className="w-7 h-7 rounded shrink-0" />}
-                                                <span className="truncate" style={{ color: color.text }}>{character.passive?.name ?? '-'}</span>
-                                            </div>
-                                        </button>
-                                    ) : <EmptyCell />}
+                        {nodes.map(node => {
+                            const { x, y } = pos(node)
+                            const icon = nodeIcon(node)
+                            const on = isSelected(node)
+                            return (
+                                <button
+                                    key={`${node.type}_${node.step}`}
+                                    type="button"
+                                    onClick={() => setSelected(node)}
+                                    className="absolute flex flex-col items-center gap-1"
+                                    style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W }}
+                                >
+                                    <span
+                                        className="flex items-center justify-center rounded-full transition"
+                                        style={{
+                                            width: MANIFEST_ICON, height: MANIFEST_ICON,
+                                            border: `2px solid ${on ? MANIFEST_LINE : color.border}`,
+                                            background: on ? color.bg : 'rgba(0,0,0,0.35)',
+                                            boxShadow: on ? `0 0 14px ${MANIFEST_LINE}66` : 'none',
+                                        }}
+                                    >
+                                        {icon
+                                            ? <img src={icon} alt="" className="h-11 w-11 rounded-full object-contain" />
+                                            : <span className="text-[11px] text-stone-500">능력치</span>}
+                                    </span>
+                                    <span className="text-xs break-keep" style={{ color: on ? color.text : '#A8A29E' }}>
+                                        {MANIFEST_LABELS[node.type]}
+                                    </span>
+                                </button>
+                            )
+                        })}
 
-                                    {/* 아티팩트 */}
-                                    {ARTIFACT_STEPS.includes(step) ? (
-                                        <button type="button" onClick={() => toggle('artifact', step)} className="rounded p-2.5 text-left text-sm" style={cellStyle('artifact', step)}>
-                                            <div className="text-stone-400 mb-0.5 text-xs">아티팩트{artifacts.length > 1 ? ` ${artifacts.length}개` : ''}</div>
-                                            <div className="flex items-center gap-1.5">
-                                                {artifacts.filter(a => a.iconUrl).map(a => (
-                                                    <img key={a.artifactId} src={a.iconUrl!} alt="" className="w-7 h-7 rounded" />
-                                                ))}
-                                                <span className="truncate" style={{ color: color.text }}>
-                                                    {artifacts.length > 0 ? artifacts.map(a => a.name).join(', ') : '-'}
-                                                </span>
-                                            </div>
-                                        </button>
-                                    ) : <EmptyCell />}
-                                </div>
+                        {/* 단계 번호 */}
+                        {MANIFEST_STEPS.map((step, i) => (
+                            <div key={step} className="absolute flex items-center justify-center rounded-full text-sm font-bold"
+                                 style={{
+                                     left: 4, top: i * MANIFEST_ROW_H + (MANIFEST_ICON - 32) / 2,
+                                     width: 32, height: 32,
+                                     border: `2px solid ${color.primary}`, color: color.text, background: color.bg,
+                                 }}>
+                                {step}
                             </div>
+                        ))}
+                    </div>
+                </div>
 
-                            {/* 상세 (클릭한 줄 바로 아래) */}
-                            {selectedItem?.step === step && (
-                                <div className="ml-14 mt-2 rounded p-4" style={{ border: `1px solid ${color.primary}`, background: color.bg }}>
-                                    {renderDetail(selectedItem.type, step)}
-                                </div>
-                            )}
-                        </div>
-                    )
-                })}
+                {/* 상세 (트리 오른쪽) */}
+                <div className="min-w-0 flex-1 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
+                    {renderDetail()}
+                </div>
             </div>
         </SectionBox>
     )
