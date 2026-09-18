@@ -14,10 +14,12 @@ export interface BuffLevelDto {
     maxStack: number | null
 }
 
-export interface CharacterBriefDto {
-    characterId: number
+// 버프를 쓰는 주체 — 캐릭터, 또는 공용 옵션이면 그 무기
+export interface EffectOwnerDto {
+    kind: 'character' | 'weapon'
+    id: number
     name: string
-    thumbnailUrl: string | null
+    iconUrl: string | null
 }
 
 export interface BuffSourceDto {
@@ -37,7 +39,7 @@ export interface BuffDto {
     levels: BuffLevelDto[]
     tags: TagDto[]
     sources: BuffSourceDto[]
-    usedBy: CharacterBriefDto[]
+    usedBy: EffectOwnerDto[]
 }
 
 export interface DebuffDto {
@@ -51,7 +53,7 @@ export interface DebuffDto {
     levels: BuffLevelDto[]
     tags: TagDto[]
     sources: BuffSourceDto[]
-    usedBy: CharacterBriefDto[]
+    usedBy: EffectOwnerDto[]
 }
 
 export const getBuffList = () =>

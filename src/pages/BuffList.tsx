@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { getBuffList, getDebuffList } from '../api/buffApi'
-import type { BuffDto, DebuffDto, TagDto, CharacterBriefDto } from '../api/buffApi'
+import type { BuffDto, DebuffDto, TagDto, EffectOwnerDto } from '../api/buffApi'
 import EffectText from '../components/common/EffectText'
 import { EffectDictProvider, PERMANENT_DURATION } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
@@ -19,7 +19,7 @@ interface EffectRow {
     maxStack: number | null
     levels: { level: number; levelName: string | null; effectText: string | null; duration: number | null; maxStack: number | null }[]
     tags: TagDto[]
-    usedBy: CharacterBriefDto[]
+    usedBy: EffectOwnerDto[]
 }
 
 const toRow = (e: BuffDto | DebuffDto): EffectRow => ({
@@ -38,12 +38,14 @@ const KIND_COLOR: Record<Kind, string> = { buff: '#4ADE80', debuff: '#FB923C' }
 const durationLabel = (duration: number | null) =>
     duration == null ? null : duration === PERMANENT_DURATION ? '영구' : `${duration}턴`
 
-const Users = ({ users }: { users: CharacterBriefDto[] }) => (
+// 캐릭터는 동그란 얼굴, 무기(공용 옵션)는 네모 아이콘
+const Users = ({ users }: { users: EffectOwnerDto[] }) => (
     <div className="flex items-center gap-1">
         {users.map(u => (
-            <span key={u.characterId} title={u.name} className="flex items-center">
-                {u.thumbnailUrl
-                    ? <img src={u.thumbnailUrl} alt={u.name} className="h-7 w-7 rounded-full object-cover"
+            <span key={`${u.kind}_${u.id}`} title={u.kind === 'weapon' ? `${u.name} (무기 옵션)` : u.name} className="flex items-center">
+                {u.iconUrl
+                    ? <img src={u.iconUrl} alt={u.name}
+                           className={`h-7 w-7 object-cover ${u.kind === 'weapon' ? 'rounded' : 'rounded-full'}`}
                            style={{ border: '1px solid rgba(255,255,255,0.15)' }} />
                     : <span className="rounded px-1.5 py-0.5 text-[11px] text-stone-400">{u.name}</span>}
             </span>

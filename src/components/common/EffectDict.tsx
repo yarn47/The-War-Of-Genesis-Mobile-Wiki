@@ -32,7 +32,7 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
         effectText: src.description,
         iconUrl: src.iconUrl,
         tags: src.tags,
-        users: src.usedBy.map(u => ({ name: u.name, thumbnailUrl: u.thumbnailUrl })),
+        users: src.usedBy.map(u => ({ kind: u.kind, name: u.name, iconUrl: u.iconUrl })),
     }
 
     const entries: [string, EffectEntry][] = [[src.name, base]]
@@ -59,10 +59,11 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
     return entries
 }
 
-// 툴팁에 같이 띄울 사용자 (캐릭터 얼굴)
+// 툴팁에 같이 띄울 사용자 (캐릭터 얼굴 · 공용 옵션이면 무기)
 export interface EffectUser {
+    kind: 'character' | 'weapon'
     name: string
-    thumbnailUrl: string | null
+    iconUrl: string | null
 }
 
 // 버프 이름 → 사용자 목록. 버프/디버프 메뉴에서는 버프마다 다르게 넘기면 된다

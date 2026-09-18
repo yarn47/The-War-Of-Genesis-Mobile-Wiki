@@ -115,8 +115,10 @@ const EffectTooltip = ({ entry, anchor, depth, onMouseEnter, onMouseLeave }: {
                 <div className="mt-2 flex items-center gap-2 border-t border-stone-800 pt-2">
                     <span className="text-[11px] text-stone-500">사용자</span>
                     {users.map(user => (
-                        <span key={user.name} className="flex items-center gap-1 text-[11px] text-stone-300">
-                            {user.thumbnailUrl && <img src={user.thumbnailUrl} alt="" className="h-6 w-6 rounded-full object-cover" />}
+                        <span key={`${user.kind}_${user.name}`} className="flex items-center gap-1 text-[11px] text-stone-300">
+                            {user.iconUrl && (
+                                <img src={user.iconUrl} alt="" className={`h-6 w-6 object-cover ${user.kind === 'weapon' ? 'rounded' : 'rounded-full'}`} />
+                            )}
                             {user.name}
                         </span>
                     ))}
