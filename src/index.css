@@ -51,11 +51,11 @@
 
 [data-theme="seopoong"] .bg-theme,
 .bg-theme {
-    background-image: url('/src/assets/bg-main.png');
+    background-image: url('/src/assets/bg-main.jpg');
 }
 
 [data-theme="light"] .bg-theme {
-    background-image: url('/src/assets/bg-light.png');
+    background-image: url('/src/assets/bg-light.jpg');
 }
 
 /* ── 유틸리티 클래스 ── */

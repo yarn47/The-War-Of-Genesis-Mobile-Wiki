@@ -108,27 +108,25 @@ const CLASS_LINE = '#FBBF24' // 연결선 (노랑)
 
 type PlacedClass = { cls: ClassTreeNodeDto; x: number; y: number }
 
-// 잎부터 자리를 잡고 부모는 자식들의 가운데로 (좌표를 알아야 대각선을 그릴 수 있다)
+// 같은 단계는 왼쪽부터 차례로 (1티어 아이콘 기준 왼쪽 정렬), 부모→자식은 대각선으로 잇는다
 const layoutClassTree = (roots: ClassTreeNodeDto[], childrenOf: (id: number) => ClassTreeNodeDto[]) => {
-    const placed: PlacedClass[] = []
-    let leaf = 0
+    const rows: ClassTreeNodeDto[][] = []
 
-    const walk = (cls: ClassTreeNodeDto, depth: number): number => {
-        const kids = childrenOf(cls.classId)
-        let x: number
-        if (kids.length === 0) {
-            x = leaf * (CLASS_NODE_W + CLASS_COL_GAP) + CLASS_NODE_W / 2
-            leaf += 1
-        } else {
-            const xs = kids.map(kid => walk(kid, depth + 1))
-            x = (Math.min(...xs) + Math.max(...xs)) / 2
-        }
-        placed.push({ cls, x, y: depth * CLASS_ROW_H })
-        return x
+    const collect = (cls: ClassTreeNodeDto, depth: number) => {
+        (rows[depth] ??= []).push(cls)
+        childrenOf(cls.classId).forEach(kid => collect(kid, depth + 1))
     }
-    roots.forEach(root => walk(root, 0))
+    roots.forEach(root => collect(root, 0))
 
-    const width = Math.max(leaf, 1) * (CLASS_NODE_W + CLASS_COL_GAP) - CLASS_COL_GAP
+    const placed: PlacedClass[] = rows.flatMap((row, depth) =>
+        row.map((cls, i) => ({
+            cls,
+            x: i * (CLASS_NODE_W + CLASS_COL_GAP) + CLASS_NODE_W / 2,
+            y: depth * CLASS_ROW_H,
+        }))
+    )
+
+    const width = Math.max(1, ...rows.map(r => r.length)) * (CLASS_NODE_W + CLASS_COL_GAP) - CLASS_COL_GAP
     const height = Math.max(0, ...placed.map(p => p.y)) + CLASS_ICON + 30
     return { placed, width, height }
 }
