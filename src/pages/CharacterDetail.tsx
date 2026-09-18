@@ -98,77 +98,99 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
 )
 
 // ─── 클래스 트리 ───────────────────────────────────────────
-// 게임 안 트리처럼 아이콘 위 · 이름 아래, 부모-자식은 선으로 연결
+// 아이콘 위 · 이름 아래, 부모에서 자식으로 대각선 한 줄로 연결
 
-const ClassNodeButton = ({ cls, color, selected, onSelect }: {
-    cls: ClassTreeNodeDto
-    color: ElementColor
-    selected: boolean
-    onSelect: () => void
-}) => (
-    <button type="button" onClick={onSelect} className="flex w-28 flex-col items-center gap-1.5 px-1">
-        <span
-            className="flex h-20 w-20 items-center justify-center rounded-full transition"
-            style={{
-                border: `2px solid ${selected ? color.primary : color.border}`,
-                background: selected ? color.bg : 'rgba(0,0,0,0.35)',
-                boxShadow: selected ? `0 0 16px ${color.glow}` : 'none',
-            }}
-        >
-            {cls.iconUrl
-                ? <img src={cls.iconUrl} alt="" className="h-16 w-16 rounded-full object-contain" />
-                : <span className="text-xs text-stone-600">{cls.name}</span>}
-        </span>
-        <span className="text-center text-sm break-keep" style={{ color: selected ? color.text : '#D6D3D1' }}>{cls.name}</span>
-    </button>
-)
+const CLASS_ICON = 80        // 아이콘 원 지름
+const CLASS_NODE_W = 104     // 노드 한 칸 너비
+const CLASS_COL_GAP = 20
+const CLASS_ROW_H = 140
+const CLASS_LINE = '#FBBF24' // 연결선 (노랑)
 
-const ClassTreeNode = ({ cls, childrenOf, color, selectedId, onSelect }: {
-    cls: ClassTreeNodeDto
-    childrenOf: (id: number) => ClassTreeNodeDto[]
+type PlacedClass = { cls: ClassTreeNodeDto; x: number; y: number }
+
+// 잎부터 자리를 잡고 부모는 자식들의 가운데로 (좌표를 알아야 대각선을 그릴 수 있다)
+const layoutClassTree = (roots: ClassTreeNodeDto[], childrenOf: (id: number) => ClassTreeNodeDto[]) => {
+    const placed: PlacedClass[] = []
+    let leaf = 0
+
+    const walk = (cls: ClassTreeNodeDto, depth: number): number => {
+        const kids = childrenOf(cls.classId)
+        let x: number
+        if (kids.length === 0) {
+            x = leaf * (CLASS_NODE_W + CLASS_COL_GAP) + CLASS_NODE_W / 2
+            leaf += 1
+        } else {
+            const xs = kids.map(kid => walk(kid, depth + 1))
+            x = (Math.min(...xs) + Math.max(...xs)) / 2
+        }
+        placed.push({ cls, x, y: depth * CLASS_ROW_H })
+        return x
+    }
+    roots.forEach(root => walk(root, 0))
+
+    const width = Math.max(leaf, 1) * (CLASS_NODE_W + CLASS_COL_GAP) - CLASS_COL_GAP
+    const height = Math.max(0, ...placed.map(p => p.y)) + CLASS_ICON + 30
+    return { placed, width, height }
+}
+
+const ClassTreeGraph = ({ placed, width, height, color, selectedId, onSelect }: {
+    placed: PlacedClass[]
+    width: number
+    height: number
     color: ElementColor
     selectedId: number | null
     onSelect: (cls: ClassTreeNodeDto) => void
 }) => {
-    const kids = childrenOf(cls.classId)
-    const line = color.primary
+    const byId = new Map(placed.map(p => [p.cls.classId, p]))
 
     return (
-        <div className="flex flex-col items-center">
-            <ClassNodeButton cls={cls} color={color} selected={selectedId === cls.classId} onSelect={() => onSelect(cls)} />
+        <div className="relative" style={{ width, height }}>
+            <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
+                {placed.map(p => {
+                    const parent = p.cls.parentClassId != null ? byId.get(p.cls.parentClassId) : undefined
+                    if (!parent) return null
+                    return (
+                        <line key={p.cls.classId}
+                              x1={parent.x} y1={parent.y + CLASS_ICON}
+                              x2={p.x} y2={p.y}
+                              stroke={CLASS_LINE} strokeWidth={2} strokeOpacity={0.8} strokeLinecap="round" />
+                    )
+                })}
+            </svg>
 
-            {kids.length > 0 && (
-                <>
-                    {/* 부모에서 내려오는 선 */}
-                    <div className="h-6 w-0.5 rounded" style={{ background: line, opacity: 0.6 }} />
-                    <div className="flex items-start">
-                        {kids.map((kid, i) => (
-                            <div key={kid.classId} className="relative flex flex-col items-center px-3">
-                                {/* 형제들을 잇는 가로선 (양끝은 반쪽만) */}
-                                <div
-                                    className="absolute top-0 h-0.5 rounded"
-                                    style={{
-                                        background: line,
-                                        opacity: 0.6,
-                                        left: i === 0 ? '50%' : 0,
-                                        right: i === kids.length - 1 ? '50%' : 0,
-                                    }}
-                                />
-                                {/* 자식으로 내려가는 선 */}
-                                <div className="h-6 w-0.5 rounded" style={{ background: line, opacity: 0.6 }} />
-                                <ClassTreeNode cls={kid} childrenOf={childrenOf} color={color} selectedId={selectedId} onSelect={onSelect} />
-                            </div>
-                        ))}
-                    </div>
-                </>
-            )}
+            {placed.map(({ cls, x, y }) => {
+                const selected = selectedId === cls.classId
+                return (
+                    <button
+                        key={cls.classId}
+                        type="button"
+                        onClick={() => onSelect(cls)}
+                        className="absolute flex flex-col items-center gap-1.5"
+                        style={{ left: x - CLASS_NODE_W / 2, top: y, width: CLASS_NODE_W }}
+                    >
+                        <span
+                            className="flex items-center justify-center rounded-full transition"
+                            style={{
+                                width: CLASS_ICON,
+                                height: CLASS_ICON,
+                                border: `2px solid ${selected ? CLASS_LINE : color.border}`,
+                                background: selected ? color.bg : 'rgba(0,0,0,0.35)',
+                                boxShadow: selected ? `0 0 16px ${CLASS_LINE}66` : 'none',
+                            }}
+                        >
+                            {cls.iconUrl
+                                ? <img src={cls.iconUrl} alt="" className="h-16 w-16 rounded-full object-contain" />
+                                : <span className="text-xs text-stone-600">{cls.name}</span>}
+                        </span>
+                        <span className="text-center text-sm break-keep" style={{ color: selected ? color.text : '#D6D3D1' }}>{cls.name}</span>
+                    </button>
+                )
+            })}
         </div>
     )
 }
 
 const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto['classTree']; color: ElementColor }) => {
-    const [selectedClass, setSelectedClass] = useState<ClassTreeNodeDto | null>(null)
-
     const byOrder = (a: ClassTreeNodeDto, b: ClassTreeNodeDto) =>
         a.tier - b.tier || (a.orderInTier ?? 0) - (b.orderInTier ?? 0)
 
@@ -176,26 +198,23 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
     // 부모가 트리 안에 없으면 뿌리로 취급
     const roots = classTree.filter(c => c.parentClassId == null || !ids.has(c.parentClassId)).sort(byOrder)
     const childrenOf = (id: number) => classTree.filter(c => c.parentClassId === id).sort(byOrder)
+    const { placed, width, height } = layoutClassTree(roots, childrenOf)
 
-    const select = (cls: ClassTreeNodeDto) =>
-        setSelectedClass(selectedClass?.classId === cls.classId ? null : cls)
+    // 처음엔 1티어(로그)를 펼쳐둔다
+    const [selectedClass, setSelectedClass] = useState<ClassTreeNodeDto | null>(() => roots[0] ?? null)
 
     return (
         <SectionBox title="클래스 트리" color={color}>
-            <div className="space-y-4">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                 {/* 트리 */}
-                <div className="overflow-x-auto">
-                    <div className="flex min-w-max justify-center gap-8 py-2">
-                        {roots.map(root => (
-                            <ClassTreeNode key={root.classId} cls={root} childrenOf={childrenOf} color={color}
-                                           selectedId={selectedClass?.classId ?? null} onSelect={select} />
-                        ))}
-                    </div>
+                <div className="overflow-x-auto pb-2 lg:shrink-0">
+                    <ClassTreeGraph placed={placed} width={width} height={height} color={color}
+                                    selectedId={selectedClass?.classId ?? null} onSelect={setSelectedClass} />
                 </div>
 
-                {/* 선택 패널 */}
+                {/* 선택 패널 (트리 오른쪽) */}
                 {selectedClass && (
-                    <div className="rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
+                    <div className="min-w-0 flex-1 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         <div className="mb-3 flex items-center gap-2.5">
                             {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-11 h-11 rounded-full" />}
                             <div className="font-semibold text-base" style={{ color: color.text }}>{selectedClass.name}</div>
