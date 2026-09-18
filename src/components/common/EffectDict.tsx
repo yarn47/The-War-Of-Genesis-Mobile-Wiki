@@ -15,6 +15,7 @@ export interface EffectEntry {
     effectText: string | null
     iconUrl: string | null
     tags: TagDto[]
+    users: EffectUser[]      // 이 효과를 쓰는 캐릭터
 }
 
 export const PERMANENT_DURATION = -1
@@ -31,6 +32,7 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
         effectText: src.description,
         iconUrl: src.iconUrl,
         tags: src.tags,
+        users: src.usedBy.map(u => ({ name: u.name, thumbnailUrl: u.thumbnailUrl })),
     }
 
     const entries: [string, EffectEntry][] = [[src.name, base]]
@@ -83,9 +85,12 @@ export const useEffectEntry = (label: string): EffectEntry | null => {
     return (m && ctx.dict.get(m[1])) ?? null
 }
 
+// 화면에서 따로 넘긴 사용자가 있으면 그걸, 없으면 버프 자체의 사용자를 쓴다
 export const useEffectUsers = (buffName: string): EffectUser[] => {
     const ctx = useContext(EffectDictContext)
-    return ctx ? ctx.usersOf(buffName) : []
+    if (!ctx) return []
+    const override = ctx.usersOf(buffName)
+    return override.length > 0 ? override : (ctx.dict.get(buffName)?.users ?? [])
 }
 
 // 버프/디버프 전체 목록을 한 번만 받아서 사전으로 제공

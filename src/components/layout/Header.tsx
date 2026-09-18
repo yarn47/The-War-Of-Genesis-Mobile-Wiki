@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Theme } from '../../App'
 import { login, logout } from '../../api/authApi'
 
@@ -62,15 +62,15 @@ const Header = ({ theme, setTheme, isAdmin, setIsAdmin }: HeaderProps) => {
         <>
             <header className="sticky top-0 z-50 border-b border-[var(--card-border)] bg-[var(--card-header-bg)]">
                 <div className="mx-auto flex h-15 max-w-screen-2xl items-center gap-6 px-6">
-                    {/* 로고 */}
-                    <div className="flex items-baseline gap-2 whitespace-nowrap">
+                    {/* 로고 (누르면 홈으로) */}
+                    <Link to="/" className="flex items-baseline gap-2 whitespace-nowrap">
                         <span className="font-cinzel text-lg font-bold tracking-wider text-[var(--accent)] drop-shadow-[0_0_20px_rgba(201,168,76,0.4)]">
                             GENESIS
                         </span>
                         <span className="text-xs font-light tracking-widest text-[var(--text-secondary)]">
                             창세기전 모바일 위키
                         </span>
-                    </div>
+                    </Link>
 
                     {/* 검색 */}
                     <div className="relative flex-1 max-w-lg">

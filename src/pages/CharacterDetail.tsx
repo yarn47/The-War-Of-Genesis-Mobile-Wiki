@@ -500,7 +500,7 @@ const CharacterDetail = () => {
     const color = ELEMENT_COLORS[character.element] ?? ELEMENT_COLORS['light']
 
     return (
-        <EffectDictProvider users={[{ name: character.name, thumbnailUrl: character.thumbnailUrl }]}>
+        <EffectDictProvider>
         <div className="flex-1 overflow-y-auto">
             {/* ── 프로필 카드 ── */}
             <div className="relative overflow-hidden" style={{ borderBottom: `1px solid ${color.border}`, background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, ${color.bg} 100%)` }}>

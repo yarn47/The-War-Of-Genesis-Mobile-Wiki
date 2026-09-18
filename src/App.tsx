@@ -8,6 +8,7 @@ import CharacterDetail from './pages/CharacterDetail'
 import CharacterList from './pages/CharacterList'
 import Login from './pages/Login'
 import ItemList from './pages/ItemList'
+import BuffList from './pages/BuffList'
 import WeaponDetail from './pages/WeaponDetail'
 import AdminHome from './pages/admin/AdminHome'
 import CharacterAdmin from './pages/admin/CharacterAdmin'
@@ -50,6 +51,7 @@ function App() {
                             <Route path="/" element={<Home />} />
                             <Route path="/characters" element={<CharacterList />} />
                             <Route path="/characters/:id" element={<CharacterDetail />} />
+                            <Route path="/buff" element={<BuffList />} />
                             <Route path="/items" element={<ItemList />} />
                             <Route path="/items/weapons/:id" element={<WeaponDetail />} />
                             <Route path="/login" element={<Login onLogin={() => setIsAdmin(true)} />} />

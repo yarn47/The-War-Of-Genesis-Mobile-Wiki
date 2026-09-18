@@ -14,6 +14,12 @@ export interface BuffLevelDto {
     maxStack: number | null
 }
 
+export interface CharacterBriefDto {
+    characterId: number
+    name: string
+    thumbnailUrl: string | null
+}
+
 export interface BuffSourceDto {
     sourceType: string
     sourceId: number
@@ -31,6 +37,7 @@ export interface BuffDto {
     levels: BuffLevelDto[]
     tags: TagDto[]
     sources: BuffSourceDto[]
+    usedBy: CharacterBriefDto[]
 }
 
 export interface DebuffDto {
@@ -44,6 +51,7 @@ export interface DebuffDto {
     levels: BuffLevelDto[]
     tags: TagDto[]
     sources: BuffSourceDto[]
+    usedBy: CharacterBriefDto[]
 }
 
 export const getBuffList = () =>
