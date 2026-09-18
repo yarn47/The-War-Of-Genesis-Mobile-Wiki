@@ -435,7 +435,7 @@ const CharacterDetail = () => {
 
                     {/* 소개 */}
                     {character.profileText && (
-                        <div className="mt-6 pt-6 border-t text-sm text-stone-400 leading-relaxed" style={{ borderColor: color.border }}>
+                        <div className="mt-6 pt-6 border-t text-sm text-stone-400 leading-relaxed whitespace-pre-line" style={{ borderColor: color.border }}>
                             {character.profileText}
                         </div>
                     )}
