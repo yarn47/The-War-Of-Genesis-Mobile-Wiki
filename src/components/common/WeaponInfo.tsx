@@ -25,9 +25,9 @@ const Collapsible = ({ title, color, children }: { title: string; color: Palette
     const [open, setOpen] = useState(false)
     return (
         <div className="mb-2 overflow-hidden rounded" style={{ border: `1px solid ${color.border}` }}>
-            <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2 text-left" style={{ background: color.bg }}>
-                <span className="text-sm font-semibold" style={{ color: color.text }}>{title}</span>
-                <span className="text-xs" style={{ color: color.primary }}>{open ? '▲' : '▼'}</span>
+            <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center justify-between px-4 py-2 text-left" style={{ background: color.bg }}>
+                <span className="text-base font-semibold" style={{ color: color.text }}>{title}</span>
+                <span className="text-sm" style={{ color: color.primary }}>{open ? '▲' : '▼'}</span>
             </button>
             {open && <div className="p-4 border-t" style={{ borderColor: color.border }}>{children}</div>}
         </div>
@@ -39,19 +39,19 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
     return (
         <div className="flex items-start gap-4">
             {weapon.iconUrl && (
-                <img src={weapon.iconUrl} alt="" className="w-16 h-16 rounded object-cover shrink-0" style={{ border: `1px solid ${color.border}` }} />
+                <img src={weapon.iconUrl} alt="" className="w-24 h-24 rounded object-cover shrink-0" style={{ border: `1px solid ${color.border}` }} />
             )}
             <div className="flex-1 min-w-0">
-                <div className="font-semibold text-sm mb-1" style={{ color: color.text }}>{weapon.name}</div>
-                <div className="text-xs text-stone-500 mb-2">{weapon.weaponType} · {GRADE_LABELS[weapon.grade] ?? weapon.grade}</div>
-                {weapon.description && <div className="text-xs text-stone-400 mb-3 whitespace-pre-line leading-relaxed">{weapon.description}</div>}
+                <div className="font-semibold text-lg mb-1" style={{ color: color.text }}>{weapon.name}</div>
+                <div className="text-sm text-stone-500 mb-2">{weapon.weaponType} · {GRADE_LABELS[weapon.grade] ?? weapon.grade}</div>
+                {weapon.description && <div className="text-sm text-stone-400 mb-3 whitespace-pre-line leading-relaxed">{weapon.description}</div>}
                 {weapon.extraStats && (
-                    <div className="text-xs mb-3"><span className="text-stone-500">추가 능력치 </span><span className="text-stone-300">{weapon.extraStats}</span></div>
+                    <div className="text-sm mb-3"><span className="text-stone-500">추가 능력치 </span><span className="text-stone-300">{weapon.extraStats}</span></div>
                 )}
 
                 {steps.length > 0 && (
                     <div className="mb-3 overflow-x-auto">
-                        <table className="text-xs text-stone-400">
+                        <table className="text-sm text-stone-400">
                             <thead>
                                 <tr style={{ color: color.text }}>
                                     <th className="pr-3 py-0.5 text-left font-medium">각성</th>
@@ -78,10 +78,10 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
 
                 {weapon.effects.map(effect => (
                     <Collapsible key={effect.effectId} title={`${effect.effectName}${effect.effectType === 'exclusive' ? ' (캐릭터 전용)' : ''}`} color={color}>
-                        {effect.baseEffect && <div className="text-xs text-stone-400 mb-2"><EffectText text={effect.baseEffect} /></div>}
+                        {effect.baseEffect && <div className="text-sm text-stone-400 mb-2"><EffectText text={effect.baseEffect} /></div>}
                         <div className="space-y-1">
                             {effect.levels.map(lvl => (
-                                <div key={lvl.breakthroughStep} className="flex gap-2 text-xs">
+                                <div key={lvl.breakthroughStep} className="flex gap-2 text-sm">
                                     <span className="shrink-0 rounded px-1.5 py-0.5 font-bold" style={{ background: color.bg, color: color.text }}>
                                         각성 {lvl.breakthroughStep}단
                                     </span>

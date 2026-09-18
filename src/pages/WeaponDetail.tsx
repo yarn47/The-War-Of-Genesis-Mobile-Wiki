@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getWeaponDetail } from '../api/itemApi'
 import type { ExclusiveWeaponDto } from '../api/itemApi'
 import WeaponInfo, { type Palette } from '../components/common/WeaponInfo'
+import { EffectDictProvider } from '../components/common/EffectDict'
 
 const GRADE_PALETTES: Record<string, Palette> = {
     rare:   { primary: '#3B82F6', bg: 'rgba(59,130,246,0.08)',  border: 'rgba(59,130,246,0.35)',  text: '#93C5FD' },
@@ -43,6 +44,7 @@ const WeaponDetail = () => {
     const color = GRADE_PALETTES[weapon.grade] ?? GRADE_PALETTES['legend']
 
     return (
+        <EffectDictProvider>
         <div className="flex-1 overflow-y-auto">
             <div className="max-w-screen-lg mx-auto px-8 py-6">
                 <button onClick={() => navigate('/items')} className="mb-4 text-xs text-stone-600 hover:text-stone-400">← 아이템 목록</button>
@@ -51,6 +53,7 @@ const WeaponDetail = () => {
                 </div>
             </div>
         </div>
+        </EffectDictProvider>
     )
 }
 
