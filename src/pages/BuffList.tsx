@@ -4,6 +4,7 @@ import type { BuffDto, DebuffDto, TagDto, EffectOwnerDto } from '../api/buffApi'
 import EffectText from '../components/common/EffectText'
 import { EffectDictProvider, PERMANENT_DURATION } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
+import EffectOwners from '../components/common/EffectOwners'
 
 // ─── 버프/디버프 목록 ──────────────────────────────────────
 // 아이콘이 없어서 펼치는 리스트로. 한 줄에 이름·태그·지속/중첩·사용자, 펼치면 레벨별 효과
@@ -38,21 +39,6 @@ const KIND_COLOR: Record<Kind, string> = { buff: '#4ADE80', debuff: '#FB923C' }
 const durationLabel = (duration: number | null) =>
     duration == null ? null : duration === PERMANENT_DURATION ? '영구' : `${duration}턴`
 
-// 캐릭터는 동그란 얼굴, 무기(공용 옵션)는 네모 아이콘
-const Users = ({ users }: { users: EffectOwnerDto[] }) => (
-    <div className="flex items-center gap-1">
-        {users.map(u => (
-            <span key={`${u.kind}_${u.id}`} title={u.kind === 'weapon' ? `${u.name} (무기 옵션)` : u.name} className="flex items-center">
-                {u.iconUrl
-                    ? <img src={u.iconUrl} alt={u.name}
-                           className={`h-7 w-7 object-cover ${u.kind === 'weapon' ? 'rounded' : 'rounded-full'}`}
-                           style={{ border: '1px solid rgba(255,255,255,0.15)' }} />
-                    : <span className="rounded px-1.5 py-0.5 text-[11px] text-stone-400">{u.name}</span>}
-            </span>
-        ))}
-    </div>
-)
-
 const EffectItem = ({ row, kind }: { row: EffectRow; kind: Kind }) => {
     const [open, setOpen] = useState(false)
     const accent = KIND_COLOR[kind]
@@ -74,7 +60,7 @@ const EffectItem = ({ row, kind }: { row: EffectRow; kind: Kind }) => {
                     {row.maxStack != null && row.maxStack > 1 && <span>중첩 <span className="text-stone-300">{row.maxStack}</span></span>}
                 </span>
 
-                <Users users={row.usedBy} />
+                <EffectOwners owners={row.usedBy} />
                 <span className="text-xs" style={{ color: accent }}>{open ? '▲' : '▼'}</span>
             </button>
 
