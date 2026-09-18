@@ -4,6 +4,7 @@ import { getCharacterDetail } from '../api/characterApi'
 import type { CharacterDetailDto } from '../api/characterApi'
 import EffectText from '../components/common/EffectText'
 import { getTagColorClass } from '../constants/tagColors'
+import WeaponInfo from '../components/common/WeaponInfo'
 import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_STEPS } from '../constants/manifest'
 
 // ─── 속성 색상 ─────────────────────────────────────────────
@@ -27,18 +28,6 @@ const GRADE_LABELS: Record<string, string> = {
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
     astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈'
-}
-
-// 전용무기 baseStats: [{ step, maxHp, attack, critRate, physPen }] 형태의 JSON 문자열
-type WeaponStep = { step: number; maxHp?: number; attack?: number; critRate?: number; physPen?: number }
-const parseWeaponStats = (json: string | null): WeaponStep[] => {
-    if (!json) return []
-    try {
-        const parsed: unknown = JSON.parse(json)
-        return Array.isArray(parsed) ? (parsed as WeaponStep[]).filter(s => typeof s?.step === 'number') : []
-    } catch {
-        return []
-    }
 }
 
 const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
@@ -534,64 +523,7 @@ const CharacterDetail = () => {
                 {/* 전용무기 */}
                 {character.exclusiveWeapon && (
                     <SectionBox title="전용무기" color={color}>
-                        <div className="flex items-start gap-4">
-                            {character.exclusiveWeapon.iconUrl && (
-                                <img src={character.exclusiveWeapon.iconUrl} alt="" className="w-12 h-12 rounded object-cover shrink-0" style={{ border: `1px solid ${color.border}` }} />
-                            )}
-                            <div className="flex-1">
-                                <div className="font-semibold text-sm mb-1" style={{ color: color.text }}>{character.exclusiveWeapon.name}</div>
-                                <div className="text-xs text-stone-500 mb-2">{character.exclusiveWeapon.weaponType} · {GRADE_LABELS[character.exclusiveWeapon.grade]}</div>
-                                {character.exclusiveWeapon.description && (
-                                    <div className="text-xs text-stone-400 mb-3 whitespace-pre-line">{character.exclusiveWeapon.description}</div>
-                                )}
-                                {character.exclusiveWeapon.extraStats && (
-                                    <div className="text-xs mb-3"><span className="text-stone-500">추가 능력치 </span><span className="text-stone-300">{character.exclusiveWeapon.extraStats}</span></div>
-                                )}
-                                {(() => {
-                                    const steps = parseWeaponStats(character.exclusiveWeapon!.baseStats)
-                                    if (steps.length === 0) return null
-                                    return (
-                                        <div className="mb-3 overflow-x-auto">
-                                            <table className="text-xs text-stone-400">
-                                                <thead>
-                                                    <tr style={{ color: color.text }}>
-                                                        <th className="pr-3 py-0.5 text-left font-medium">각성</th>
-                                                        <th className="pr-3 py-0.5 text-left font-medium">최대 체력</th>
-                                                        <th className="pr-3 py-0.5 text-left font-medium">공격력</th>
-                                                        <th className="pr-3 py-0.5 text-left font-medium">치명타 확률</th>
-                                                        <th className="py-0.5 text-left font-medium">물리 관통</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {steps.map(s => (
-                                                        <tr key={s.step}>
-                                                            <td className="pr-3 py-0.5">{s.step}단</td>
-                                                            <td className="pr-3 py-0.5 text-stone-300">{s.maxHp ?? '-'}</td>
-                                                            <td className="pr-3 py-0.5 text-stone-300">{s.attack ?? '-'}</td>
-                                                            <td className="pr-3 py-0.5 text-stone-300">{s.critRate != null ? `+${s.critRate}%` : '-'}</td>
-                                                            <td className="py-0.5 text-stone-300">{s.physPen != null ? `+${s.physPen}%` : '-'}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    )
-                                })()}
-                                {character.exclusiveWeapon.effects.map(effect => (
-                                    <CollapsibleBox key={effect.effectId} title={`${effect.effectName}${effect.effectType === 'exclusive' ? ' (캐릭터 전용)' : ''}`} color={color}>
-                                        {effect.baseEffect && <div className="text-xs text-stone-400 mb-2"><EffectText text={effect.baseEffect} /></div>}
-                                        <div className="space-y-1">
-                                            {effect.levels.map(lvl => (
-                                                <div key={lvl.breakthroughStep} className="flex gap-2 text-xs">
-                                                    <span className="shrink-0 rounded px-1.5 py-0.5 font-bold" style={{ background: color.bg, color: color.text }}>각성 {lvl.breakthroughStep}단</span>
-                                                    <EffectText text={lvl.effectText} className="text-stone-300" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </CollapsibleBox>
-                                ))}
-                            </div>
-                        </div>
+                        <WeaponInfo weapon={character.exclusiveWeapon} color={color} />
                     </SectionBox>
                 )}
             </div>

@@ -16,7 +16,7 @@ const navItems = [
         label: '컨텐츠',
         items: [
             { name: '버프/디버프', href: '/buff' },
-            { name: '아이템', href: '/item' },
+            { name: '아이템', href: '/items' },
             { name: '업데이트', href: '/update' },
         ]
     },
