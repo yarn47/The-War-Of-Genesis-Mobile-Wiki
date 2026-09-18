@@ -98,43 +98,97 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
 )
 
 // ─── 클래스 트리 ───────────────────────────────────────────
+// 게임 안 트리처럼 아이콘 위 · 이름 아래, 부모-자식은 선으로 연결
+
+const ClassNodeButton = ({ cls, color, selected, onSelect }: {
+    cls: ClassTreeNodeDto
+    color: ElementColor
+    selected: boolean
+    onSelect: () => void
+}) => (
+    <button type="button" onClick={onSelect} className="flex w-28 flex-col items-center gap-1.5 px-1">
+        <span
+            className="flex h-20 w-20 items-center justify-center rounded-full transition"
+            style={{
+                border: `2px solid ${selected ? color.primary : color.border}`,
+                background: selected ? color.bg : 'rgba(0,0,0,0.35)',
+                boxShadow: selected ? `0 0 16px ${color.glow}` : 'none',
+            }}
+        >
+            {cls.iconUrl
+                ? <img src={cls.iconUrl} alt="" className="h-16 w-16 rounded-full object-contain" />
+                : <span className="text-xs text-stone-600">{cls.name}</span>}
+        </span>
+        <span className="text-center text-sm break-keep" style={{ color: selected ? color.text : '#D6D3D1' }}>{cls.name}</span>
+    </button>
+)
+
+const ClassTreeNode = ({ cls, childrenOf, color, selectedId, onSelect }: {
+    cls: ClassTreeNodeDto
+    childrenOf: (id: number) => ClassTreeNodeDto[]
+    color: ElementColor
+    selectedId: number | null
+    onSelect: (cls: ClassTreeNodeDto) => void
+}) => {
+    const kids = childrenOf(cls.classId)
+    const line = color.primary
+
+    return (
+        <div className="flex flex-col items-center">
+            <ClassNodeButton cls={cls} color={color} selected={selectedId === cls.classId} onSelect={() => onSelect(cls)} />
+
+            {kids.length > 0 && (
+                <>
+                    {/* 부모에서 내려오는 선 */}
+                    <div className="h-6 w-0.5 rounded" style={{ background: line, opacity: 0.6 }} />
+                    <div className="flex items-start">
+                        {kids.map((kid, i) => (
+                            <div key={kid.classId} className="relative flex flex-col items-center px-3">
+                                {/* 형제들을 잇는 가로선 (양끝은 반쪽만) */}
+                                <div
+                                    className="absolute top-0 h-0.5 rounded"
+                                    style={{
+                                        background: line,
+                                        opacity: 0.6,
+                                        left: i === 0 ? '50%' : 0,
+                                        right: i === kids.length - 1 ? '50%' : 0,
+                                    }}
+                                />
+                                {/* 자식으로 내려가는 선 */}
+                                <div className="h-6 w-0.5 rounded" style={{ background: line, opacity: 0.6 }} />
+                                <ClassTreeNode cls={kid} childrenOf={childrenOf} color={color} selectedId={selectedId} onSelect={onSelect} />
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    )
+}
 
 const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto['classTree']; color: ElementColor }) => {
-    const [selectedClass, setSelectedClass] = useState<typeof classTree[0] | null>(null)
+    const [selectedClass, setSelectedClass] = useState<ClassTreeNodeDto | null>(null)
 
-    const tiers = [1, 2, 3]
-    const byTier = (tier: number) => classTree.filter(c => c.tier === tier)
+    const byOrder = (a: ClassTreeNodeDto, b: ClassTreeNodeDto) =>
+        a.tier - b.tier || (a.orderInTier ?? 0) - (b.orderInTier ?? 0)
+
+    const ids = new Set(classTree.map(c => c.classId))
+    // 부모가 트리 안에 없으면 뿌리로 취급
+    const roots = classTree.filter(c => c.parentClassId == null || !ids.has(c.parentClassId)).sort(byOrder)
+    const childrenOf = (id: number) => classTree.filter(c => c.parentClassId === id).sort(byOrder)
+
+    const select = (cls: ClassTreeNodeDto) =>
+        setSelectedClass(selectedClass?.classId === cls.classId ? null : cls)
 
     return (
         <SectionBox title="클래스 트리" color={color}>
             <div className="space-y-4">
                 {/* 트리 */}
-                <div>
-                    <div className="relative">
-                        {tiers.map(tier => (
-                            <div key={tier} className="mb-4">
-                                <div className="mb-2 text-sm font-semibold text-stone-500">Tier {tier}</div>
-                                <div className="flex flex-wrap gap-2">
-                                    {byTier(tier).map(cls => (
-                                        <button
-                                            key={cls.classId}
-                                            type="button"
-                                            onClick={() => setSelectedClass(selectedClass?.classId === cls.classId ? null : cls)}
-                                            className="flex items-center gap-2.5 rounded px-4 py-2.5 text-base"
-                                            style={{
-                                                border: `1px solid ${selectedClass?.classId === cls.classId ? color.primary : color.border}`,
-                                                background: selectedClass?.classId === cls.classId ? color.bg : 'rgba(0,0,0,0.2)',
-                                                color: selectedClass?.classId === cls.classId ? color.text : '#9CA3AF',
-                                                boxShadow: selectedClass?.classId === cls.classId ? `0 0 12px ${color.glow}` : 'none'
-                                            }}
-                                        >
-                                            {cls.iconUrl && <img src={cls.iconUrl} alt="" className="w-7 h-7 rounded-full" />}
-                                            <span>{cls.name}</span>
-                                        </button>
-                                    ))}
-                                    {byTier(tier).length === 0 && <span className="text-sm text-stone-700">-</span>}
-                                </div>
-                            </div>
+                <div className="overflow-x-auto">
+                    <div className="flex min-w-max justify-center gap-8 py-2">
+                        {roots.map(root => (
+                            <ClassTreeNode key={root.classId} cls={root} childrenOf={childrenOf} color={color}
+                                           selectedId={selectedClass?.classId ?? null} onSelect={select} />
                         ))}
                     </div>
                 </div>
@@ -144,10 +198,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                     <div className="rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         <div className="mb-3 flex items-center gap-2.5">
                             {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-11 h-11 rounded-full" />}
-                            <div>
-                                <div className="font-semibold text-base" style={{ color: color.text }}>{selectedClass.name}</div>
-                                <div className="text-xs text-stone-500">Tier {selectedClass.tier}</div>
-                            </div>
+                            <div className="font-semibold text-base" style={{ color: color.text }}>{selectedClass.name}</div>
                         </div>
 
                         {/* 스탯 */}
