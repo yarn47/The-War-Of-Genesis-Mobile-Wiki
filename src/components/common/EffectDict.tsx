@@ -57,20 +57,40 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
     return entries
 }
 
-const EffectDictContext = createContext<Dict | null>(null)
+// 툴팁에 같이 띄울 사용자 (캐릭터 얼굴)
+export interface EffectUser {
+    name: string
+    thumbnailUrl: string | null
+}
+
+// 버프 이름 → 사용자 목록. 버프/디버프 메뉴에서는 버프마다 다르게 넘기면 된다
+type UserLookup = (buffName: string) => EffectUser[]
+
+interface EffectDictValue {
+    dict: Dict
+    usersOf: UserLookup
+}
+
+const EffectDictContext = createContext<EffectDictValue | null>(null)
 
 export const useEffectEntry = (label: string): EffectEntry | null => {
-    const dict = useContext(EffectDictContext)
-    if (!dict) return null
-    const direct = dict.get(label)
+    const ctx = useContext(EffectDictContext)
+    if (!ctx) return null
+    const direct = ctx.dict.get(label)
     if (direct) return direct
     // "이름 5" 형태인데 그 레벨이 없으면 본체라도
     const m = label.match(/^(.+?)\s*\d+$/)
-    return (m && dict.get(m[1])) ?? null
+    return (m && ctx.dict.get(m[1])) ?? null
+}
+
+export const useEffectUsers = (buffName: string): EffectUser[] => {
+    const ctx = useContext(EffectDictContext)
+    return ctx ? ctx.usersOf(buffName) : []
 }
 
 // 버프/디버프 전체 목록을 한 번만 받아서 사전으로 제공
-export const EffectDictProvider = ({ children }: { children: React.ReactNode }) => {
+// users: 이 화면 안의 효과를 쓰는 캐릭터 (캐릭터 페이지면 그 캐릭터 하나)
+export const EffectDictProvider = ({ users, usersOf, children }: { users?: EffectUser[]; usersOf?: UserLookup; children: React.ReactNode }) => {
     const [buffs, setBuffs] = useState<BuffDto[]>([])
     const [debuffs, setDebuffs] = useState<DebuffDto[]>([])
 
@@ -85,12 +105,12 @@ export const EffectDictProvider = ({ children }: { children: React.ReactNode }) 
         return () => { alive = false }
     }, [])
 
-    const dict = useMemo(() => {
+    const value = useMemo(() => {
         const map: Dict = new Map()
         buffs.forEach(b => buildEntries(b, 'buff').forEach(([k, v]) => map.set(k, v)))
         debuffs.forEach(d => buildEntries(d, 'debuff').forEach(([k, v]) => map.set(k, v)))
-        return map
-    }, [buffs, debuffs])
+        return { dict: map, usersOf: usersOf ?? (() => users ?? []) }
+    }, [buffs, debuffs, users, usersOf])
 
-    return <EffectDictContext.Provider value={dict}>{children}</EffectDictContext.Provider>
+    return <EffectDictContext.Provider value={value}>{children}</EffectDictContext.Provider>
 }

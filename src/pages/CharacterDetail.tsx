@@ -193,31 +193,21 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
 }
 
 // ─── 액티브 스킬 ───────────────────────────────────────────
-// 클래스 트리에 딸린 스킬을 클래스별로 한눈에
+// 클래스 트리에 딸린 스킬을 클래스 구분 없이 한 줄로
 
 const ActiveSkillSection = ({ classTree, color }: { classTree: ClassTreeNodeDto[]; color: ElementColor }) => {
-    const classes = classTree
+    const skills = classTree
         .filter(c => c.skills.length > 0)
         .sort((a, b) => a.tier - b.tier || (a.orderInTier ?? 0) - (b.orderInTier ?? 0))
+        .flatMap(c => c.skills.map(skill => ({ skill, attackType: c.attackType })))
 
-    if (classes.length === 0) return null
+    if (skills.length === 0) return null
 
     return (
         <SectionBox title="액티브 스킬" color={color}>
-            <div className="space-y-5">
-                {classes.map(cls => (
-                    <div key={cls.classId}>
-                        <div className="mb-2 flex items-center gap-2.5">
-                            {cls.iconUrl && <img src={cls.iconUrl} alt="" className="w-8 h-8 rounded-full" />}
-                            <span className="text-base font-semibold" style={{ color: color.text }}>{cls.name}</span>
-                            <span className="text-xs text-stone-500">Tier {cls.tier}</span>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-2">
-                            {cls.skills.map(skill => (
-                                <SkillCard key={skill.skillId} skill={skill} color={color} fallbackAttackType={cls.attackType} />
-                            ))}
-                        </div>
-                    </div>
+            <div className="grid gap-3 md:grid-cols-2">
+                {skills.map(({ skill, attackType }) => (
+                    <SkillCard key={skill.skillId} skill={skill} color={color} fallbackAttackType={attackType} />
                 ))}
             </div>
         </SectionBox>
@@ -431,7 +421,7 @@ const CharacterDetail = () => {
     const color = ELEMENT_COLORS[character.element] ?? ELEMENT_COLORS['light']
 
     return (
-        <EffectDictProvider>
+        <EffectDictProvider users={[{ name: character.name, thumbnailUrl: character.thumbnailUrl }]}>
         <div className="flex-1 overflow-y-auto">
             {/* ── 프로필 카드 ── */}
             <div className="relative overflow-hidden" style={{ borderBottom: `1px solid ${color.border}`, background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, ${color.bg} 100%)` }}>
@@ -524,7 +514,7 @@ const CharacterDetail = () => {
 
                     {/* 소개 */}
                     {character.profileText && (
-                        <div className="mt-6 pt-6 border-t text-base text-stone-400 leading-relaxed whitespace-pre-line" style={{ borderColor: color.border }}>
+                        <div className="mt-6 pt-6 border-t text-base text-stone-100 leading-relaxed whitespace-pre-line" style={{ borderColor: color.border }}>
                             {character.profileText}
                         </div>
                     )}

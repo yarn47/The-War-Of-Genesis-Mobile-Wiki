@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useEffectEntry, PERMANENT_DURATION } from './EffectDict'
+import { useEffectEntry, useEffectUsers, PERMANENT_DURATION } from './EffectDict'
 import type { EffectEntry } from './EffectDict'
 import { getTagColorClass } from '../../constants/tagColors'
 
@@ -35,6 +35,7 @@ const durationLabel = (duration: number | null) =>
 const EffectTooltip = ({ entry, anchor }: { entry: EffectEntry; anchor: DOMRect }) => {
     const isBuff = entry.kind === 'buff'
     const accent = isBuff ? '#4ADE80' : '#FB923C'
+    const users = useEffectUsers(entry.name)
 
     const half = TOOLTIP_WIDTH / 2
     const left = Math.min(Math.max(anchor.left + anchor.width / 2, half + 8), window.innerWidth - half - 8)
@@ -81,6 +82,18 @@ const EffectTooltip = ({ entry, anchor }: { entry: EffectEntry; anchor: DOMRect 
             {entry.effectText
                 ? <EffectText text={entry.effectText} className="block text-xs leading-relaxed text-stone-300" nested />
                 : <span className="text-xs text-stone-600">설명 없음</span>}
+
+            {users.length > 0 && (
+                <div className="mt-2 flex items-center gap-2 border-t border-stone-800 pt-2">
+                    <span className="text-[11px] text-stone-500">사용자</span>
+                    {users.map(user => (
+                        <span key={user.name} className="flex items-center gap-1 text-[11px] text-stone-300">
+                            {user.thumbnailUrl && <img src={user.thumbnailUrl} alt="" className="h-6 w-6 rounded-full object-cover" />}
+                            {user.name}
+                        </span>
+                    ))}
+                </div>
+            )}
         </div>,
         document.body
     )
@@ -92,35 +105,15 @@ const EffectTag = ({ label, hex }: { label: string; hex: string }) => {
     const entry = useEffectEntry(label)
     const ref = useRef<HTMLSpanElement>(null)
     const [anchor, setAnchor] = useState<DOMRect | null>(null)
-    const [pinned, setPinned] = useState(false)
-
-    useEffect(() => {
-        if (!pinned) return
-        const close = (e: MouseEvent) => {
-            if (!ref.current?.contains(e.target as Node)) {
-                setPinned(false)
-                setAnchor(null)
-            }
-        }
-        document.addEventListener('click', close)
-        return () => document.removeEventListener('click', close)
-    }, [pinned])
 
     if (!entry) return <span className="font-semibold" style={{ color: hex }}>{label}</span>
-
-    const show = () => setAnchor(ref.current?.getBoundingClientRect() ?? null)
 
     return (
         <>
             <span
                 ref={ref}
-                onMouseEnter={show}
-                onMouseLeave={() => { if (!pinned) setAnchor(null) }}
-                onClick={e => {
-                    e.stopPropagation()
-                    if (pinned) { setPinned(false); setAnchor(null) }
-                    else { setPinned(true); show() }
-                }}
+                onMouseEnter={() => setAnchor(ref.current?.getBoundingClientRect() ?? null)}
+                onMouseLeave={() => setAnchor(null)}
                 className="cursor-help font-semibold underline decoration-dotted underline-offset-2"
                 style={{ color: hex }}
             >

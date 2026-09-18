@@ -44,7 +44,7 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
             <div className="flex-1 min-w-0">
                 <div className="font-semibold text-lg mb-1" style={{ color: color.text }}>{weapon.name}</div>
                 <div className="text-sm text-stone-500 mb-2">{weapon.weaponType} · {GRADE_LABELS[weapon.grade] ?? weapon.grade}</div>
-                {weapon.description && <div className="text-sm text-stone-400 mb-3 whitespace-pre-line leading-relaxed">{weapon.description}</div>}
+                {weapon.description && <div className="text-sm text-stone-100 mb-3 whitespace-pre-line leading-relaxed">{weapon.description}</div>}
                 {weapon.extraStats && (
                     <div className="text-sm mb-3"><span className="text-stone-500">추가 능력치 </span><span className="text-stone-300">{weapon.extraStats}</span></div>
                 )}
