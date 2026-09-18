@@ -103,8 +103,7 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
 const CLASS_ICON = 80        // 아이콘 원 지름
 const CLASS_NODE_W = 104     // 노드 한 칸 너비
 const CLASS_COL_GAP = 20
-const CLASS_ROW_H = 140
-const CLASS_LINE = '#FBBF24' // 연결선 (노랑)
+const CLASS_ROW_H = 132
 
 type PlacedClass = { cls: ClassTreeNodeDto; x: number; y: number }
 
@@ -139,23 +138,8 @@ const ClassTreeGraph = ({ placed, width, height, color, selectedId, onSelect }: 
     selectedId: number | null
     onSelect: (cls: ClassTreeNodeDto) => void
 }) => {
-    const byId = new Map(placed.map(p => [p.cls.classId, p]))
-
     return (
         <div className="relative" style={{ width, height }}>
-            <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
-                {placed.map(p => {
-                    const parent = p.cls.parentClassId != null ? byId.get(p.cls.parentClassId) : undefined
-                    if (!parent) return null
-                    return (
-                        <line key={p.cls.classId}
-                              x1={parent.x} y1={parent.y + CLASS_ICON}
-                              x2={p.x} y2={p.y}
-                              stroke={CLASS_LINE} strokeWidth={2} strokeOpacity={0.8} strokeLinecap="round" />
-                    )
-                })}
-            </svg>
-
             {placed.map(({ cls, x, y }) => {
                 const selected = selectedId === cls.classId
                 return (
@@ -171,9 +155,9 @@ const ClassTreeGraph = ({ placed, width, height, color, selectedId, onSelect }: 
                             style={{
                                 width: CLASS_ICON,
                                 height: CLASS_ICON,
-                                border: `2px solid ${selected ? CLASS_LINE : color.border}`,
+                                border: `2px solid ${selected ? color.primary : color.border}`,
                                 background: selected ? color.bg : 'rgba(0,0,0,0.35)',
-                                boxShadow: selected ? `0 0 16px ${CLASS_LINE}66` : 'none',
+                                boxShadow: selected ? `0 0 16px ${color.glow}` : 'none',
                             }}
                         >
                             {cls.iconUrl
@@ -293,11 +277,16 @@ const MANIFEST_LABELS: Record<ManifestItemType, string> = {
     ultimate: '필살기', passive: '고유 패시브', stat: '능력치 강화', artifact: '아티팩트',
 }
 
+// 게임에서 딴 공용 아이콘 (캐릭터마다 같은 그림)
+const MANIFEST_ICONS: Partial<Record<ManifestItemType, string>> = {
+    stat: '/icons/manifest/stat_boost.png',
+    artifact: '/icons/manifest/artifact.png',
+}
+
 const MANIFEST_ICON = 56
-const MANIFEST_COL_W = 116
-const MANIFEST_ROW_H = 92
+const MANIFEST_COL_W = 96
+const MANIFEST_ROW_H = 76
 const MANIFEST_GUTTER = 48   // 왼쪽 단계 번호 자리
-const MANIFEST_LINE = '#FBBF24'
 
 const ManifestationSection = ({ character, color }: { character: CharacterDetailDto; color: ElementColor }) => {
     const getUltimateLevel = (step: number) =>
@@ -324,35 +313,13 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
         y: MANIFEST_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
     })
 
-    // 같은 열은 세로로, 새 갈래가 시작될 때는 대각선으로 (게임 트리와 동일)
-    const links: [ManifestNode, ManifestNode][] = []
-    ;[0, 1, 2].forEach(col => {
-        const inCol = nodes.filter(n => n.col === col).sort((a, b) => a.step - b.step)
-        inCol.forEach((n, i) => { if (i > 0) links.push([inCol[i - 1], n]) })
-    })
-    const firstOf = (type: ManifestItemType) => nodes.filter(n => n.type === type).sort((a, b) => a.step - b.step)[0]
-    const lastBefore = (type: ManifestItemType, step: number) =>
-        nodes.filter(n => n.type === type && n.step < step).sort((a, b) => b.step - a.step)[0]
-
-    const passiveHead = firstOf('passive')
-    const artifactHead = firstOf('artifact')
-    if (passiveHead) {
-        const from = lastBefore('ultimate', passiveHead.step)
-        if (from) links.push([from, passiveHead])
-    }
-    if (artifactHead) {
-        const from = lastBefore('passive', artifactHead.step)
-        if (from) links.push([from, artifactHead])
-    }
-
     const width = MANIFEST_GUTTER + 3 * MANIFEST_COL_W
-    const height = (MANIFEST_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 26
+    const height = (MANIFEST_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
 
     const nodeIcon = (node: ManifestNode) => {
         if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl
         if (node.type === 'passive') return character.passive?.iconUrl
-        if (node.type === 'artifact') return getArtifactsAt(node.step).find(a => a.iconUrl)?.iconUrl
-        return null
+        return MANIFEST_ICONS[node.type]
     }
 
     const isSelected = (node: ManifestNode) => selected.type === node.type && selected.step === node.step
@@ -441,16 +408,9 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                         <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
                             {/* 단계 구분선 */}
                             {MANIFEST_STEPS.map((step, i) => (
-                                <line key={`row_${step}`} x1={0} y1={i * MANIFEST_ROW_H - 13} x2={width} y2={i * MANIFEST_ROW_H - 13}
+                                <line key={`row_${step}`} x1={0} y1={i * MANIFEST_ROW_H - 10} x2={width} y2={i * MANIFEST_ROW_H - 10}
                                       stroke="#78716C" strokeWidth={1} strokeOpacity={0.25} />
                             ))}
-                            {links.map(([from, to], i) => {
-                                const a = pos(from), b = pos(to)
-                                return (
-                                    <line key={i} x1={a.x} y1={a.y + MANIFEST_ICON} x2={b.x} y2={b.y}
-                                          stroke={MANIFEST_LINE} strokeWidth={2} strokeOpacity={0.8} strokeLinecap="round" />
-                                )
-                            })}
                         </svg>
 
                         {nodes.map(node => {
@@ -466,20 +426,16 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                     style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W }}
                                 >
                                     <span
+                                        title={MANIFEST_LABELS[node.type]}
                                         className="flex items-center justify-center rounded-full transition"
                                         style={{
                                             width: MANIFEST_ICON, height: MANIFEST_ICON,
-                                            border: `2px solid ${on ? MANIFEST_LINE : color.border}`,
+                                            border: `2px solid ${on ? color.primary : color.border}`,
                                             background: on ? color.bg : 'rgba(0,0,0,0.35)',
-                                            boxShadow: on ? `0 0 14px ${MANIFEST_LINE}66` : 'none',
+                                            boxShadow: on ? `0 0 14px ${color.glow}` : 'none',
                                         }}
                                     >
-                                        {icon
-                                            ? <img src={icon} alt="" className="h-11 w-11 rounded-full object-contain" />
-                                            : <span className="text-[11px] text-stone-500">능력치</span>}
-                                    </span>
-                                    <span className="text-xs break-keep" style={{ color: on ? color.text : '#A8A29E' }}>
-                                        {MANIFEST_LABELS[node.type]}
+                                        {icon && <img src={icon} alt="" className="h-11 w-11 rounded-full object-contain" />}
                                     </span>
                                 </button>
                             )
