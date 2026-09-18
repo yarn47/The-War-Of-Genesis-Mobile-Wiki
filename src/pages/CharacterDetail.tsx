@@ -47,7 +47,7 @@ const SectionBox = ({ title, color, children }: { title: string; color: typeof E
     </div>
 )
 
-const CollapsibleBox = ({ title, color, children }: { title: string; color: typeof ELEMENT_COLORS[string]; children: React.ReactNode }) => {
+const CollapsibleBox = ({ title, color, icon, children }: { title: string; color: typeof ELEMENT_COLORS[string]; icon?: string | null; children: React.ReactNode }) => {
     const [open, setOpen] = useState(false)
     return (
         <div className="mb-3 overflow-hidden rounded" style={{ border: `1px solid ${color.border}` }}>
@@ -56,7 +56,10 @@ const CollapsibleBox = ({ title, color, children }: { title: string; color: type
                 className="w-full flex items-center justify-between px-5 py-3 text-left"
                 style={{ background: color.bg }}
             >
-                <span className="text-sm font-semibold" style={{ color: color.text }}>{title}</span>
+                <span className="flex items-center gap-2 text-sm font-semibold" style={{ color: color.text }}>
+                    {icon && <img src={icon} alt="" className="w-7 h-7 rounded" />}
+                    {title}
+                </span>
                 <span className="text-xs" style={{ color: color.primary }}>{open ? '▲' : '▼'}</span>
             </button>
             {open && <div className="p-5 border-t" style={{ borderColor: color.border }}>{children}</div>}
@@ -74,9 +77,9 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
 
     return (
         <SectionBox title="클래스 트리" color={color}>
-            <div className="flex gap-6">
+            <div className="space-y-4">
                 {/* 트리 */}
-                <div className="flex-1">
+                <div>
                     <div className="relative">
                         {tiers.map(tier => (
                             <div key={tier} className="mb-4">
@@ -107,7 +110,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
 
                 {/* 선택 패널 */}
                 {selectedClass && (
-                    <div className="w-72 shrink-0 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
+                    <div className="rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         <div className="mb-3 flex items-center gap-2">
                             {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-8 h-8 rounded-full" />}
                             <div>
@@ -117,7 +120,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                         </div>
 
                         {/* 스탯 */}
-                        <div className="mb-3 grid grid-cols-2 gap-1 text-xs">
+                        <div className="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-xs">
                             {selectedClass.weaponType && <div className="text-stone-400">사용무기 <span className="text-stone-200">{selectedClass.weaponType}</span></div>}
                             {selectedClass.defenseType && <div className="text-stone-400">방어타입 <span className="text-stone-200">{DEFENSE_LABELS[selectedClass.defenseType] ?? selectedClass.defenseType}</span></div>}
                             {selectedClass.attackType && <div className="text-stone-400">공격타입 <span className="text-stone-200">{selectedClass.attackType}</span></div>}
@@ -218,9 +221,9 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
 
     return (
         <SectionBox title="발현 트리" color={color}>
-            <div className="flex gap-6">
+            <div className="space-y-4">
                 {/* 트리 */}
-                <div className="flex-1 space-y-3">
+                <div className="space-y-2">
                     {MANIFEST_STEPS.map(step => {
                         const artifacts = getArtifactsAt(step)
                         return (
@@ -255,8 +258,13 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                     {ARTIFACT_STEPS.includes(step) ? (
                                         <button onClick={() => toggle('artifact', step)} className="rounded p-2 text-left text-xs" style={cellStyle('artifact', step)}>
                                             <div className="text-stone-400 mb-0.5">아티팩트{artifacts.length > 1 ? ` ${artifacts.length}개` : ''}</div>
-                                            <div className="truncate" style={{ color: color.text }}>
-                                                {artifacts.length > 0 ? artifacts.map(a => a.name).join(', ') : '-'}
+                                            <div className="flex items-center gap-1">
+                                                {artifacts.filter(a => a.iconUrl).map(a => (
+                                                    <img key={a.artifactId} src={a.iconUrl!} alt="" className="w-5 h-5 rounded" />
+                                                ))}
+                                                <span className="truncate" style={{ color: color.text }}>
+                                                    {artifacts.length > 0 ? artifacts.map(a => a.name).join(', ') : '-'}
+                                                </span>
                                             </div>
                                         </button>
                                     ) : <EmptyCell />}
@@ -268,7 +276,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
 
                 {/* 상세 패널 */}
                 {selectedItem && (
-                    <div className="w-72 shrink-0 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
+                    <div className="rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         {selectedItem.type === 'ultimate' && (() => {
                             const lvl = getUltimateLevel(selectedItem.step)
                             return (
@@ -310,7 +318,10 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                             const lvl = art.levels.find(l => l.manifestStep === selectedItem.step)
                                             return (
                                                 <div key={art.artifactId}>
-                                                    <div className="mb-1 font-semibold text-sm" style={{ color: color.text }}>{art.artifactOrder}. {art.name}</div>
+                                                    <div className="mb-1 flex items-center gap-2 font-semibold text-sm" style={{ color: color.text }}>
+                                                        {art.iconUrl && <img src={art.iconUrl} alt="" className="w-6 h-6 rounded" />}
+                                                        {art.artifactOrder}. {art.name}
+                                                    </div>
                                                     {lvl?.effectText ? <div className="text-xs text-stone-300"><EffectText text={lvl.effectText} /></div> : <div className="text-xs text-stone-500">효과 없음</div>}
                                                 </div>
                                             )
@@ -376,17 +387,18 @@ const CharacterDetail = () => {
                                     No Image
                                 </div>
                             )}
-                            {/* 속성 뱃지 */}
-                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded text-xs font-bold"
-                                 style={{ background: color.primary, color: '#000' }}>
-                                {ELEMENT_LABELS[character.element]}
-                            </div>
                         </div>
 
                         {/* 기본 정보 */}
                         <div className="flex-1 pt-2">
-                            <div className="mb-1 text-xs tracking-widest" style={{ color: color.primary }}>
-                                {GRADE_LABELS[character.grade]} · {FACTION_LABELS[character.faction]}
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                                <span className="text-xs tracking-widest" style={{ color: color.primary }}>
+                                    {GRADE_LABELS[character.grade]} · {FACTION_LABELS[character.faction]}
+                                </span>
+                                <span className="rounded px-2 py-0.5 text-xs font-bold"
+                                      style={{ background: color.bg, border: `1px solid ${color.border}`, color: color.text }}>
+                                    {ELEMENT_LABELS[character.element]}
+                                </span>
                             </div>
                             <h1 className="font-cinzel text-3xl font-bold mb-1" style={{ color: color.text, textShadow: `0 0 30px ${color.glow}` }}>
                                 {character.name}
@@ -503,7 +515,7 @@ const CharacterDetail = () => {
                     <SectionBox title="아티팩트" color={color}>
                         <div className="space-y-4">
                             {character.artifacts.map(art => (
-                                <CollapsibleBox key={art.artifactId} title={`${art.artifactOrder}. ${art.name}`} color={color}>
+                                <CollapsibleBox key={art.artifactId} title={`${art.artifactOrder}. ${art.name}`} icon={art.iconUrl} color={color}>
                                     <div className="space-y-2">
                                         {art.levels.map(lvl => (
                                             <div key={lvl.manifestStep} className="flex gap-3 text-xs">
