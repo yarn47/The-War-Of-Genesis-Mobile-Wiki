@@ -25,7 +25,7 @@ const ELEMENTS = [{ value: 'light', label: '신념의빛' }, { value: 'dark', la
 interface BasicState {
     name: string; grade: string; faction: string; element: string
     exclusiveWeaponId: string; exclusiveWeaponName: string
-    birthYear: string; height: string; cv: string; profileText: string
+    birthYear: string; height: string; cv: string; releaseDate: string; appearedIn: string; profileText: string
     thumbnailUrl: string; portraitUrl: string; fullImageUrl: string
     isPublished: boolean
 }
@@ -60,7 +60,7 @@ interface ArtifactForm {
 const emptyBasic = (): BasicState => ({
     name: '', grade: 'legend', faction: 'geysir', element: 'light',
     exclusiveWeaponId: '', exclusiveWeaponName: '',
-    birthYear: '', height: '', cv: '', profileText: '',
+    birthYear: '', height: '', cv: '', releaseDate: '', appearedIn: '', profileText: '',
     thumbnailUrl: '', portraitUrl: '', fullImageUrl: '',
     isPublished: false
 })
@@ -96,7 +96,7 @@ const detailToStates = (d: CharacterDetailDto) => ({
         exclusiveWeaponId: d.exclusiveWeapon ? String(d.exclusiveWeapon.weaponId) : '',
         exclusiveWeaponName: d.exclusiveWeapon?.name ?? '',
         birthYear: d.birthYear ?? '', height: d.height ?? '',
-        cv: d.cv ?? '', profileText: d.profileText ?? '',
+        cv: d.cv ?? '', releaseDate: d.releaseDate ?? '', appearedIn: d.appearedIn ?? '', profileText: d.profileText ?? '',
         thumbnailUrl: d.thumbnailUrl ?? '', portraitUrl: d.portraitUrl ?? '',
         fullImageUrl: d.fullImageUrl ?? '', isPublished: false
     } as BasicState,
@@ -146,7 +146,8 @@ const buildRequest = (
     name: basic.name, grade: basic.grade, faction: basic.faction, element: basic.element,
     exclusiveWeaponId: toInt(basic.exclusiveWeaponId),
     birthYear: toStr(basic.birthYear), height: toStr(basic.height),
-    cv: toStr(basic.cv), profileText: toStr(basic.profileText),
+    cv: toStr(basic.cv), releaseDate: toStr(basic.releaseDate), appearedIn: toStr(basic.appearedIn),
+    profileText: toStr(basic.profileText),
     thumbnailUrl: toStr(basic.thumbnailUrl), portraitUrl: toStr(basic.portraitUrl),
     fullImageUrl: toStr(basic.fullImageUrl), isPublished: basic.isPublished,
     stats: {
@@ -228,6 +229,8 @@ const BasicSection = memo(({ state, onChange, weaponSearch, setWeaponSearch, wea
                     <Field label="출생연도"><Input value={state.birthYear} onChange={e => set('birthYear', e.target.value)} placeholder="예: SS 425" /></Field>
                     <Field label="신장"><Input value={state.height} onChange={e => set('height', e.target.value)} placeholder="예: 183cm" /></Field>
                     <Field label="CV"><Input value={state.cv} onChange={e => set('cv', e.target.value)} placeholder="성우 이름" /></Field>
+                    <Field label="출시일"><Input value={state.releaseDate} onChange={e => set('releaseDate', e.target.value)} placeholder="예: 2026-05-06" /></Field>
+                    <Field label="출현작"><Input value={state.appearedIn} onChange={e => set('appearedIn', e.target.value)} placeholder="예: 창세기전 외전 템페스트" /></Field>
                 </Grid>
             </div>
             <div className="mt-3">

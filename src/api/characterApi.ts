@@ -8,6 +8,7 @@ export interface CharacterSummaryDto {
     faction: string
     element: string
     thumbnailUrl: string | null
+    releaseDate: string | null   // 목록 정렬(최신순)용
 }
 
 export interface CharacterStatsDto {
@@ -156,6 +157,8 @@ export interface CharacterDetailDto {
     birthYear: string | null
     height: string | null
     cv: string | null
+    releaseDate: string | null   // YYYY-MM-DD
+    appearedIn: string | null    // 출현작 (원작)
     profileText: string | null
     thumbnailUrl: string | null
     portraitUrl: string | null
@@ -245,6 +248,8 @@ export interface CharacterRequest {
     birthYear: string | null
     height: string | null
     cv: string | null
+    releaseDate: string | null   // YYYY-MM-DD
+    appearedIn: string | null    // 출현작 (원작)
     profileText: string | null
     thumbnailUrl: string | null
     portraitUrl: string | null

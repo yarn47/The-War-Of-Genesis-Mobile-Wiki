@@ -35,6 +35,9 @@ const FACTION_LABELS: Record<string, string> = {
 
 const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
 
+// 2026-05-06 → 2026.05.06
+const formatDate = (date: string | null) => date ? date.replaceAll('-', '.') : null
+
 const passiveLevelLabel = (type: string, step: number) =>
     PASSIVE_LEVELS.find(l => l.type === type && l.step === step)?.label ?? `${type} ${step}`
 
@@ -541,6 +544,12 @@ const CharacterDetail = () => {
                                 )}
                                 {character.cv && (
                                     <div className="text-sm"><div className="text-stone-500 mb-0.5 text-xs">CV</div><div className="text-stone-200">{character.cv}</div></div>
+                                )}
+                                {character.releaseDate && (
+                                    <div className="text-sm"><div className="text-stone-500 mb-0.5 text-xs">출시일</div><div className="text-stone-200">{formatDate(character.releaseDate)}</div></div>
+                                )}
+                                {character.appearedIn && (
+                                    <div className="text-sm"><div className="text-stone-500 mb-0.5 text-xs">출현작</div><div className="text-stone-200 break-keep">{character.appearedIn}</div></div>
                                 )}
                                 {character.exclusiveWeapon && (
                                     <div className="text-sm">
