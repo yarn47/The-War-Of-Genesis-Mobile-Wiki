@@ -46,7 +46,7 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
     return (
         <div className="flex items-start gap-4">
             {weapon.iconUrl && (
-                <img src={weapon.iconUrl} alt="" className="w-24 h-24 rounded object-cover shrink-0" style={{ border: `1px solid ${color.border}` }} />
+                <img src={weapon.iconUrl} alt="" className="h-auto w-28 rounded object-contain shrink-0" style={{ border: `1px solid ${color.border}` }} />
             )}
             <div className="flex-1 min-w-0">
                 <div className="font-semibold text-lg mb-1" style={{ color: color.text }}>{weapon.name}</div>

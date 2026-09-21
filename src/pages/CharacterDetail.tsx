@@ -68,7 +68,7 @@ const CollapsibleBox = ({ title, color, icon, children }: { title: string; color
                 style={{ background: color.bg }}
             >
                 <span className="flex items-center gap-2.5 text-base font-semibold" style={{ color: color.text }}>
-                    {icon && <img src={icon} alt="" className="w-9 h-9 rounded" />}
+                    {icon && <img src={icon} alt="" className="h-12 w-12 shrink-0 object-contain" />}
                     {title}
                 </span>
                 <span className="text-sm" style={{ color: color.primary }}>{open ? '▲' : '▼'}</span>
@@ -158,7 +158,7 @@ const ClassTreeGraph = ({ placed, width, height, color, selectedId, onSelect }: 
                         style={{ left: x - CLASS_NODE_W / 2, top: y, width: CLASS_NODE_W }}
                     >
                         <span
-                            className="flex items-center justify-center rounded-full transition"
+                            className="flex items-center justify-center overflow-hidden rounded-full transition"
                             style={{
                                 width: CLASS_ICON,
                                 height: CLASS_ICON,
@@ -168,7 +168,7 @@ const ClassTreeGraph = ({ placed, width, height, color, selectedId, onSelect }: 
                             }}
                         >
                             {cls.iconUrl
-                                ? <img src={cls.iconUrl} alt="" className="h-16 w-16 rounded-full object-contain" />
+                                ? <img src={cls.iconUrl} alt="" className="h-full w-full rounded-full object-cover" />
                                 : <span className="text-xs text-stone-600">{cls.name}</span>}
                         </span>
                         <span className="text-center text-sm break-keep" style={{ color: selected ? color.text : '#D6D3D1' }}>{cls.name}</span>
@@ -205,7 +205,7 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
                 {selectedClass && (
                     <div className="min-w-0 flex-1 rounded p-4" style={{ border: `1px solid ${color.border}`, background: color.bg }}>
                         <div className="mb-3 flex items-center gap-2.5">
-                            {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-11 h-11 rounded-full" />}
+                            {selectedClass.iconUrl && <img src={selectedClass.iconUrl} alt="" className="w-11 h-11 rounded-full object-cover" />}
                             <div className="font-semibold text-base" style={{ color: color.text }}>{selectedClass.name}</div>
                         </div>
 
@@ -291,6 +291,7 @@ const MANIFEST_ICONS: Partial<Record<ManifestItemType, string>> = {
 }
 
 const MANIFEST_ICON = 56
+const MANIFEST_SKILL_ICON = 50
 const MANIFEST_COL_W = 96
 const MANIFEST_ROW_H = 76
 const MANIFEST_GUTTER = 48   // 왼쪽 단계 번호 자리
@@ -392,7 +393,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                         return (
                             <div key={art.artifactId}>
                                 <div className="mb-1 flex items-center gap-2.5 font-semibold text-base" style={{ color: color.text }}>
-                                    {art.iconUrl && <img src={art.iconUrl} alt="" className="w-8 h-8 rounded" />}
+                                    {art.iconUrl && <img src={art.iconUrl} alt="" className="h-11 w-11 shrink-0 object-contain" />}
                                     {art.artifactOrder}. {art.name}
                                 </div>
                                 {lvl?.effectText
@@ -424,25 +425,35 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                             const { x, y } = pos(node)
                             const icon = nodeIcon(node)
                             const on = isSelected(node)
+                            const isSkill = node.type === 'ultimate' || node.type === 'passive'
+                            const iconSize = isSkill ? MANIFEST_SKILL_ICON : MANIFEST_ICON
                             return (
                                 <button
                                     key={`${node.type}_${node.step}`}
                                     type="button"
                                     onClick={() => setSelected(node)}
-                                    className="absolute flex flex-col items-center gap-1"
-                                    style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W }}
+                                    className="absolute flex flex-col items-center justify-center gap-1"
+                                    style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W, height: MANIFEST_ICON }}
                                 >
                                     <span
                                         title={MANIFEST_LABELS[node.type]}
-                                        className="flex items-center justify-center rounded-full transition"
+                                        className="flex items-center justify-center overflow-hidden rounded-full transition"
                                         style={{
-                                            width: MANIFEST_ICON, height: MANIFEST_ICON,
+                                            width: iconSize, height: iconSize,
                                             border: `2px solid ${on ? color.primary : color.border}`,
                                             background: on ? color.bg : 'rgba(0,0,0,0.35)',
                                             boxShadow: on ? `0 0 14px ${color.glow}` : 'none',
                                         }}
                                     >
-                                        {icon && <img src={icon} alt="" className="h-11 w-11 rounded-full object-contain" />}
+                                    {icon && (
+                                        <img
+                                            src={icon}
+                                            alt=""
+                                            className={isSkill
+                                                ? `h-full w-full origin-center scale-[1.18] -translate-y-px object-cover ${node.type === 'passive' ? '-translate-x-px' : 'translate-x-px'}`
+                                                : 'h-full w-full object-contain'}
+                                        />
+                                    )}
                                     </span>
                                 </button>
                             )
