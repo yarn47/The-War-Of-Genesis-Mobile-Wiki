@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Header from './components/layout/Header'
-import Sidebar from './components/layout/Sidebar'
+import Sidebar, { MobileNav } from './components/layout/Sidebar'
 import Footer from './components/layout/Footer'
 import Home from './pages/Home'
 import CharacterDetail from './pages/CharacterDetail'
@@ -38,7 +38,7 @@ function App() {
 
     return (
         <BrowserRouter>
-            <div className="relative min-h-screen" data-theme={theme}>
+            <div className="relative min-h-screen overflow-x-hidden" data-theme={theme}>
                 <div className="bg-theme fixed inset-0 z-0" style={{ filter: 'var(--bg-filter)' }} />
                 <div className="fixed inset-0 z-0" style={{ background: 'var(--overlay-gradient)' }} />
 
@@ -46,6 +46,8 @@ function App() {
                     <Header theme={theme} setTheme={setTheme} isAdmin={isAdmin} setIsAdmin={setIsAdmin} />
                     <div className="flex flex-1">
                         <Sidebar isAdmin={isAdmin} />
+                        <div className="flex min-w-0 flex-1 flex-col">
+                        <MobileNav isAdmin={isAdmin} />
                         <Routes>
                             {/* 공개 */}
                             <Route path="/" element={<Home />} />
@@ -63,6 +65,7 @@ function App() {
                             <Route path="/admin/item" element={<AdminRoute isAdmin={isAdmin}><ItemAdmin /></AdminRoute>} />
                             <Route path="/admin/buff" element={<AdminRoute isAdmin={isAdmin}><BuffAdmin /></AdminRoute>} />
                         </Routes>
+                        </div>
                     </div>
                     <Footer />
                 </div>

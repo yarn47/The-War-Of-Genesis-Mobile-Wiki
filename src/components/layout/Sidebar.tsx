@@ -36,7 +36,7 @@ const Sidebar = ({ isAdmin }: { isAdmin: boolean | null }) => {
     const location = useLocation()
 
     return (
-        <aside className="sticky top-[60px] h-[calc(100vh-60px)] w-48 flex-shrink-0 overflow-y-auto border-r border-[var(--card-border)] theme-sidebar py-5">
+        <aside className="sticky top-[60px] hidden h-[calc(100vh-60px)] w-48 flex-shrink-0 overflow-y-auto border-r border-[var(--card-border)] theme-sidebar py-5 md:block">
             {navItems.filter(section => !section.adminOnly || isAdmin).map((section) => (
                 <div key={section.label} className="mb-5">
                     <div className="mb-1.5 flex items-center gap-2 px-4">
@@ -62,6 +62,30 @@ const Sidebar = ({ isAdmin }: { isAdmin: boolean | null }) => {
                 </div>
             ))}
         </aside>
+    )
+}
+
+// 좁은 화면용 가로 메뉴 (사이드바 대신)
+export const MobileNav = ({ isAdmin }: { isAdmin: boolean | null }) => {
+    const location = useLocation()
+    const items = navItems.filter(section => !section.adminOnly || isAdmin).flatMap(s => s.items)
+
+    return (
+        <nav className="sticky top-[60px] z-30 flex gap-1 overflow-x-auto border-b border-[var(--card-border)] theme-sidebar px-3 py-2 md:hidden">
+            {items.map(item => (
+                <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`shrink-0 rounded px-3 py-1.5 text-xs tracking-wide ${
+                        location.pathname === item.href
+                            ? 'bg-[var(--accent-hover)] text-amber-400'
+                            : 'text-[var(--text-secondary)]'
+                    }`}
+                >
+                    {item.name}
+                </Link>
+            ))}
+        </nav>
     )
 }
 

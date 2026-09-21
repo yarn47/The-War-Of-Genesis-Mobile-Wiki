@@ -61,19 +61,19 @@ const Header = ({ theme, setTheme, isAdmin, setIsAdmin }: HeaderProps) => {
     return (
         <>
             <header className="sticky top-0 z-50 border-b border-[var(--card-border)] bg-[var(--card-header-bg)]">
-                <div className="mx-auto flex h-15 max-w-screen-2xl items-center gap-6 px-6">
+                <div className="flex h-15 items-center gap-3 px-4 sm:gap-6 sm:px-6">
                     {/* 로고 (누르면 홈으로) */}
                     <Link to="/" className="flex items-baseline gap-2 whitespace-nowrap">
                         <span className="font-cinzel text-lg font-bold tracking-wider text-[var(--accent)] drop-shadow-[0_0_20px_rgba(201,168,76,0.4)]">
                             GENESIS
                         </span>
-                        <span className="text-xs font-light tracking-widest text-[var(--text-secondary)]">
+                        <span className="hidden text-xs font-light tracking-widest text-[var(--text-secondary)] lg:inline">
                             창세기전 모바일 위키
                         </span>
                     </Link>
 
                     {/* 검색 */}
-                    <div className="relative flex-1 max-w-lg">
+                    <div className="relative min-w-0 flex-1 max-w-lg">
                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -81,7 +81,7 @@ const Header = ({ theme, setTheme, isAdmin, setIsAdmin }: HeaderProps) => {
                     </div>
 
                     {/* 테마 전환 */}
-                    <div className="flex gap-1">
+                    <div className="hidden gap-1 md:flex">
                         {THEMES.map(t => (
                             <button key={t.key} onClick={() => setTheme(t.key)}
                                     className={`px-3 py-1.5 rounded font-cinzel text-[10px] tracking-widest ${
