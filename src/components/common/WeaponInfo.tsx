@@ -36,6 +36,13 @@ const Collapsible = ({ title, color, children }: { title: string; color: Palette
 
 const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Palette }) => {
     const steps = parseWeaponStats(weapon.baseStats)
+    // 무기마다 붙는 수치가 달라서 값이 있는 칸만 표로 보여준다
+    const columns = ([
+        { key: 'maxHp', label: '최대 체력', fmt: (v: number) => v.toLocaleString() },
+        { key: 'attack', label: '공격력', fmt: (v: number) => v.toLocaleString() },
+        { key: 'critRate', label: '치명타 확률', fmt: (v: number) => `+${v}%` },
+        { key: 'physPen', label: '물리 관통', fmt: (v: number) => `+${v}%` },
+    ] as const).filter(col => steps.some(s => s[col.key] != null))
     return (
         <div className="flex items-start gap-4">
             {weapon.iconUrl && (
@@ -55,20 +62,20 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
                             <thead>
                                 <tr style={{ color: color.text }}>
                                     <th className="pr-3 py-0.5 text-left font-medium">각성</th>
-                                    <th className="pr-3 py-0.5 text-left font-medium">최대 체력</th>
-                                    <th className="pr-3 py-0.5 text-left font-medium">공격력</th>
-                                    <th className="pr-3 py-0.5 text-left font-medium">치명타 확률</th>
-                                    <th className="py-0.5 text-left font-medium">물리 관통</th>
+                                    {columns.map(col => (
+                                        <th key={col.key} className="pr-3 py-0.5 text-left font-medium">{col.label}</th>
+                                    ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {steps.map(s => (
                                     <tr key={s.step}>
                                         <td className="pr-3 py-0.5">{s.step}단</td>
-                                        <td className="pr-3 py-0.5 text-stone-300">{s.maxHp ?? '-'}</td>
-                                        <td className="pr-3 py-0.5 text-stone-300">{s.attack ?? '-'}</td>
-                                        <td className="pr-3 py-0.5 text-stone-300">{s.critRate != null ? `+${s.critRate}%` : '-'}</td>
-                                        <td className="py-0.5 text-stone-300">{s.physPen != null ? `+${s.physPen}%` : '-'}</td>
+                                        {columns.map(col => (
+                                            <td key={col.key} className="pr-3 py-0.5 text-stone-300">
+                                                {s[col.key] != null ? col.fmt(s[col.key] as number) : '-'}
+                                            </td>
+                                        ))}
                                     </tr>
                                 ))}
                             </tbody>

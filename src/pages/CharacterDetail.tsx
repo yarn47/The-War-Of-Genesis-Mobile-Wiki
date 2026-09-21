@@ -35,6 +35,10 @@ const FACTION_LABELS: Record<string, string> = {
 
 const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
 
+// 사거리 0-0은 '자신'
+const rangeLabel = (min: number | null, max: number | null) =>
+    min == null ? null : min === 0 && (max ?? 0) === 0 ? '자신' : `${min}${max && max !== min ? `~${max}` : ''}`
+
 // 2026-05-06 → 2026.05.06
 const formatDate = (date: string | null) => date ? date.replaceAll('-', '.') : null
 
@@ -352,7 +356,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                         <div className="space-y-2">
                             <div className="flex gap-4 text-sm text-stone-400">
                                 {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
-                                {lvl.rangeMin != null && <span>사거리 {lvl.rangeMin}{lvl.rangeMax && lvl.rangeMax !== lvl.rangeMin ? `~${lvl.rangeMax}` : ''}</span>}
+                                {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
                                 {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
                             </div>
                             {lvl.effectText && <div className="text-sm text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
@@ -654,7 +658,7 @@ const CharacterDetail = () => {
                                         <span className="text-sm font-bold rounded px-2 py-0.5" style={{ background: color.bg, color: color.text }}>발현 {lvl.manifestStep}단</span>
                                         <div className="flex gap-3 text-xs text-stone-500">
                                             {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
-                                            {lvl.rangeMin != null && <span>사거리 {lvl.rangeMin}{lvl.rangeMax && lvl.rangeMax !== lvl.rangeMin ? `~${lvl.rangeMax}` : ''}</span>}
+                                            {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
                                             {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
                                         </div>
                                     </div>
