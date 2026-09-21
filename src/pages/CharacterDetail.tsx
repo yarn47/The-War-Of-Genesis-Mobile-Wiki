@@ -6,7 +6,7 @@ import EffectText from '../components/common/EffectText'
 import { EffectDictProvider } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
 import WeaponInfo from '../components/common/WeaponInfo'
-import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_STEPS, STAT_BOOST_STEPS, STAT_BOOST_TEXT } from '../constants/manifest'
+import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_TREE_STEPS, STAT_BOOST_STEPS, STAT_BOOST_TEXT } from '../constants/manifest'
 
 // ─── 속성 색상 ─────────────────────────────────────────────
 
@@ -303,7 +303,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
         character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
 
     const nodes: ManifestNode[] = [
-        ...ULTIMATE_STEPS.map(step => ({ type: 'ultimate' as const, step, col: 0 })),
+        ...ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })),
         ...PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: 1 })),
         ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: 2 })),
         ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: 2 })),
@@ -313,11 +313,11 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
 
     const pos = (node: ManifestNode) => ({
         x: MANIFEST_GUTTER + node.col * MANIFEST_COL_W + MANIFEST_ICON / 2,
-        y: MANIFEST_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
+        y: MANIFEST_TREE_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
     })
 
     const width = MANIFEST_GUTTER + 3 * MANIFEST_COL_W
-    const height = (MANIFEST_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
+    const height = (MANIFEST_TREE_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
 
     const nodeIcon = (node: ManifestNode) => {
         if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl
@@ -410,7 +410,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                     <div className="relative" style={{ width, height }}>
                         <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
                             {/* 단계 구분선 */}
-                            {MANIFEST_STEPS.map((step, i) => (
+                            {MANIFEST_TREE_STEPS.map((step, i) => (
                                 <line key={`row_${step}`} x1={0} y1={i * MANIFEST_ROW_H - 10} x2={width} y2={i * MANIFEST_ROW_H - 10}
                                       stroke="#78716C" strokeWidth={1} strokeOpacity={0.25} />
                             ))}
@@ -445,7 +445,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                         })}
 
                         {/* 단계 번호 */}
-                        {MANIFEST_STEPS.map((step, i) => (
+                        {MANIFEST_TREE_STEPS.map((step, i) => (
                             <div key={step} className="absolute flex items-center justify-center rounded-full text-sm font-bold"
                                  style={{
                                      left: 4, top: i * MANIFEST_ROW_H + (MANIFEST_ICON - 32) / 2,
