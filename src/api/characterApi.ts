@@ -42,6 +42,7 @@ export interface SkillDto {
     rangeMax: number | null
     area: string | null
     attackType: string | null
+    element: string | null
     allowedWeapon: string | null
     cooldown: number | null
     effectText: string | null
@@ -96,6 +97,10 @@ export interface UltimateSkillDto {
     ultimateId: number
     name: string
     iconUrl: string | null
+    area: string | null
+    attackType: string | null
+    element: string | null
+    tags: TagDto[]
     levels: UltimateSkillLevelDto[]
 }
 

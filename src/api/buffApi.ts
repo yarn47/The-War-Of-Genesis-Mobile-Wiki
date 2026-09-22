@@ -33,6 +33,7 @@ export interface BuffDto {
     name: string
     description: string | null
     iconUrl: string | null
+    element: string | null
     duration: number | null
     maxStack: number | null
     hasLevels: boolean
@@ -47,6 +48,7 @@ export interface DebuffDto {
     name: string
     description: string | null
     iconUrl: string | null
+    element: string | null
     duration: number | null
     maxStack: number | null
     hasLevels: boolean

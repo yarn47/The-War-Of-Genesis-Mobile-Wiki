@@ -14,6 +14,7 @@ export interface EffectEntry {
     maxStack: number | null
     effectText: string | null
     iconUrl: string | null
+    element: string | null   // 빙한/화염/전격
     tags: TagDto[]
     users: EffectUser[]      // 이 효과를 쓰는 캐릭터
 }
@@ -31,6 +32,7 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
         maxStack: src.maxStack,
         effectText: src.description,
         iconUrl: src.iconUrl,
+        element: src.element,
         tags: src.tags,
         users: src.usedBy.map(u => ({ kind: u.kind, name: u.name, iconUrl: u.iconUrl })),
     }

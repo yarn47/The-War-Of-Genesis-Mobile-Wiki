@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import ElementBadge from '../components/common/ElementBadge'
 import { getBuffList, getDebuffList } from '../api/buffApi'
 import type { BuffDto, DebuffDto, TagDto, EffectOwnerDto } from '../api/buffApi'
 import EffectText from '../components/common/EffectText'
@@ -16,6 +17,7 @@ interface EffectRow {
     id: number
     name: string
     description: string | null
+    element: string | null
     duration: number | null
     maxStack: number | null
     levels: { level: number; levelName: string | null; effectText: string | null; duration: number | null; maxStack: number | null }[]
@@ -27,6 +29,7 @@ const toRow = (e: BuffDto | DebuffDto): EffectRow => ({
     id: 'buffId' in e ? e.buffId : e.debuffId,
     name: e.name,
     description: e.description,
+    element: e.element,
     duration: e.duration,
     maxStack: e.maxStack,
     levels: [...e.levels].sort((a, b) => a.level - b.level),
@@ -49,6 +52,7 @@ const EffectItem = ({ row, kind }: { row: EffectRow; kind: Kind }) => {
             <button type="button" onClick={() => setOpen(!open)}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left">
                 <span className="text-base font-semibold shrink-0" style={{ color: accent }}>{row.name}</span>
+                <ElementBadge element={row.element} />
 
                 {row.tags.map(tag => (
                     <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>

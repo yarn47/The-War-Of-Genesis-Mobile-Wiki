@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ElementBadge from './ElementBadge'
 import { createPortal } from 'react-dom'
 import { useEffectEntry, useEffectUsers, PERMANENT_DURATION } from './EffectDict'
 import type { EffectEntry } from './EffectDict'
@@ -90,6 +91,7 @@ const EffectTooltip = ({ entry, anchor, depth, onMouseEnter, onMouseLeave }: {
                 <span className="text-sm font-semibold" style={{ color: accent }}>
                     {entry.name}{entry.level != null ? ` ${entry.level}` : ''}
                 </span>
+                <ElementBadge element={entry.element} />
                 <span className="ml-auto text-[11px] text-stone-500">{isBuff ? '버프' : '디버프'}</span>
             </div>
 

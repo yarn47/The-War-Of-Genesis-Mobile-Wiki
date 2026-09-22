@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getCharacterDetail } from '../api/characterApi'
 import type { CharacterDetailDto, ClassTreeNodeDto, SkillDto } from '../api/characterApi'
 import EffectText from '../components/common/EffectText'
+import ElementBadge from '../components/common/ElementBadge'
 import { EffectDictProvider } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
 import WeaponInfo from '../components/common/WeaponInfo'
@@ -84,6 +85,7 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
         <div className="flex items-center gap-2.5 mb-1.5">
             {skill.iconUrl && <img src={skill.iconUrl} alt="" className="w-8 h-8 rounded" />}
             <span className="text-sm font-medium text-stone-200">{skill.name}</span>
+            <ElementBadge element={skill.element} />
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-stone-500">
             <span>TP {skill.tpCost ?? '-'}</span>
@@ -351,6 +353,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                     <div className="mb-2 flex items-center gap-2.5">
                         {character.ultimateSkill?.iconUrl && <img src={character.ultimateSkill.iconUrl} alt="" className="w-9 h-9 rounded" />}
                         <span className="font-semibold text-base" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '필살기 없음'}</span>
+                        <ElementBadge element={character.ultimateSkill?.element} />
                         <span className="text-sm text-stone-500">발현 {step}단</span>
                     </div>
                     {lvl ? (
@@ -358,8 +361,17 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                             <div className="flex gap-4 text-sm text-stone-400">
                                 {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
                                 {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
+                                {character.ultimateSkill?.area && <span>{character.ultimateSkill.area}</span>}
                                 {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
+                                {character.ultimateSkill?.attackType && <span>공격타입 {character.ultimateSkill.attackType}</span>}
                             </div>
+                            {(character.ultimateSkill?.tags?.length ?? 0) > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                    {character.ultimateSkill!.tags.map(tag => (
+                                        <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
+                                    ))}
+                                </div>
+                            )}
                             {lvl.effectText && <div className="text-sm text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
                         </div>
                     ) : <div className="text-sm text-stone-500">효과 없음</div>}
