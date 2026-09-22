@@ -311,21 +311,25 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
     const getArtifactsAt = (step: number) =>
         character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
 
+    // 번스타인처럼 필살기가 없는 캐릭터는 빈 버튼/열을 만들지 않는다.
+    const passiveCol = character.ultimateSkill ? 1 : 0
+    const commonCol = passiveCol + (character.passive ? 1 : 0)
     const nodes: ManifestNode[] = [
-        ...ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })),
-        ...PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: 1 })),
-        ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: 2 })),
-        ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: 2 })),
+        ...(character.ultimateSkill ? ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })) : []),
+        ...(character.passive ? PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: passiveCol })) : []),
+        ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: commonCol })),
+        ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: commonCol })),
     ]
 
-    const [selected, setSelected] = useState<ManifestNode>(nodes[0])
+    const [selectedNode, setSelected] = useState<ManifestNode>(nodes[0])
+    const selected = nodes.find(node => node.type === selectedNode.type && node.step === selectedNode.step) ?? nodes[0]
 
     const pos = (node: ManifestNode) => ({
         x: MANIFEST_GUTTER + node.col * MANIFEST_COL_W + MANIFEST_ICON / 2,
         y: MANIFEST_TREE_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
     })
 
-    const width = MANIFEST_GUTTER + 3 * MANIFEST_COL_W
+    const width = MANIFEST_GUTTER + (commonCol + 1) * MANIFEST_COL_W
     const height = (MANIFEST_TREE_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
 
     const nodeIcon = (node: ManifestNode) => {
@@ -445,6 +449,8 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                 <button
                                     key={`${node.type}_${node.step}`}
                                     type="button"
+                                    aria-label={`${MANIFEST_LABELS[node.type]} 발현 ${node.step}단`}
+                                    aria-pressed={on}
                                     onClick={() => setSelected(node)}
                                     className="absolute flex flex-col items-center justify-center gap-1"
                                     style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W, height: MANIFEST_ICON }}
