@@ -92,7 +92,9 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
             {skill.rangeMin != null && <span>사거리 {skill.rangeMin === 0 && skill.rangeMax === 0 ? '자신' : `${skill.rangeMin}-${skill.rangeMax ?? skill.rangeMin}`}</span>}
             {skill.area && <span>{skill.area}</span>}
             {skill.cooldown != null && <span>쿨타임 {skill.cooldown}턴</span>}
-            {(skill.attackType ?? fallbackAttackType) && <span>공격타입 {skill.attackType ?? fallbackAttackType}</span>}
+            {(skill.attackType ?? fallbackAttackType) && (
+                <span>공격타입 : <span className="font-semibold text-sky-300">{skill.attackType ?? fallbackAttackType}</span></span>
+            )}
             {skill.allowedWeapon && <span className="text-red-300/80">허용 무기: {skill.allowedWeapon}</span>}
         </div>
         {skill.tags.length > 0 && (
@@ -677,14 +679,22 @@ const CharacterDetail = () => {
                         <div className="space-y-3">
                             {character.ultimateSkill.levels.map(lvl => (
                                 <div key={lvl.manifestStep} className="rounded p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${color.border}` }}>
-                                    <div className="flex items-center gap-2 mb-2">
+                                    <div className="flex flex-wrap items-center gap-2 mb-2">
                                         <span className="text-sm font-bold rounded px-2 py-0.5" style={{ background: color.bg, color: color.text }}>발현 {lvl.manifestStep}단</span>
-                                        <div className="flex gap-3 text-xs text-stone-500">
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
                                             {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
                                             {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
                                             {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
+                                            {character.ultimateSkill?.attackType && <span>공격타입 {character.ultimateSkill.attackType}</span>}
                                         </div>
                                     </div>
+                                    {(character.ultimateSkill?.tags?.length ?? 0) > 0 && (
+                                        <div className="mb-2 flex flex-wrap gap-1">
+                                            {character.ultimateSkill!.tags.map(tag => (
+                                                <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                     {lvl.effectText && <div className="text-sm text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
                                 </div>
                             ))}
