@@ -6,6 +6,7 @@ const ELEMENTS: Record<string, { color: string; glyph: string }> = {
     화염: { color: '#F87171', glyph: '✦' },
     전격: { color: '#FBBF24', glyph: '✧' },
     암흑: { color: '#A78BFA', glyph: '☾' },
+    광휘: { color: '#FCD34D', glyph: '✦' },
 }
 
 const FALLBACK = { color: '#A8A29E', glyph: '✧' }

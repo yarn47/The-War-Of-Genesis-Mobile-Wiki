@@ -17,7 +17,7 @@ import { PASSIVE_LEVELS, ULTIMATE_STEPS, ARTIFACT_STEPS, MAX_ARTIFACTS } from '.
 // ─── 상수 ──────────────────────────────────────────────────
 
 const GRADES = [{ value: 'rare', label: '희귀' }, { value: 'hero', label: '영웅' }, { value: 'legend', label: '전설' }, { value: 'outer', label: '아우터원' }]
-const FACTIONS = [{ value: 'geysir', label: '게이시르' }, { value: 'pendragon', label: '팬드래건' }, { value: 'independent', label: '무소속' }, { value: 'astania', label: '아스타니아' }, { value: 'zephyrfalcon', label: '제피르팰컨' }, { value: 'dagal', label: '다갈' }, { value: 'curtis', label: '커티스' }]
+const FACTIONS = [{ value: 'geysir', label: '게이시르' }, { value: 'pendragon', label: '팬드래건' }, { value: 'independent', label: '무소속' }, { value: 'astania', label: '아스타니아' }, { value: 'zephyrfalcon', label: '제피르팰컨' }, { value: 'dagal', label: '다갈' }, { value: 'curtis', label: '커티스' }, { value: 'garad', label: '가라드' }]
 const ELEMENTS = [{ value: 'light', label: '신념의빛' }, { value: 'dark', label: '욕망의그림자' }, { value: 'fire', label: '자유의불꽃' }, { value: 'crystal', label: '지성의결정체' }, { value: 'nature', label: '활력의나무' }]
 
 // ─── 섹션별 state 타입 ─────────────────────────────────────

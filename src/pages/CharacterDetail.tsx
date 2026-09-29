@@ -31,7 +31,7 @@ const GRADE_LABELS: Record<string, string> = {
 
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
-    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스'
+    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드'
 }
 
 const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
@@ -89,7 +89,7 @@ const SkillCard = ({ skill, color, fallbackAttackType }: { skill: SkillDto; colo
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-stone-500">
             <span>TP {skill.tpCost ?? '-'}</span>
-            {skill.rangeMin != null && <span>사거리 {skill.rangeMin === 0 && skill.rangeMax === 0 ? '자신' : `${skill.rangeMin}-${skill.rangeMax ?? skill.rangeMin}`}</span>}
+            {skill.rangeMin != null && <span>사거리 {rangeLabel(skill.rangeMin, skill.rangeMax)}</span>}
             {skill.area && <span>{skill.area}</span>}
             {skill.cooldown != null && <span>쿨타임 {skill.cooldown}턴</span>}
             {(skill.attackType ?? fallbackAttackType) && (

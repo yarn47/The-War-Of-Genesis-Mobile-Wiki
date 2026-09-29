@@ -89,7 +89,7 @@ const EffectTooltip = ({ entry, anchor, depth, onMouseEnter, onMouseLeave }: {
             <div className="mb-1.5 flex items-center gap-2">
                 {entry.iconUrl && <img src={entry.iconUrl} alt="" className="h-7 w-7 rounded" />}
                 <span className="text-sm font-semibold" style={{ color: accent }}>
-                    {entry.name}{entry.level != null ? ` ${entry.level}` : ''}
+                    {entry.displayName}
                 </span>
                 <ElementBadge element={entry.element} />
                 <span className="ml-auto text-[11px] text-stone-500">{isBuff ? '버프' : '디버프'}</span>

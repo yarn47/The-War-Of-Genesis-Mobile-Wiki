@@ -10,6 +10,7 @@ export interface EffectEntry {
     kind: 'buff' | 'debuff'
     name: string            // 버프 본체 이름
     level: number | null    // 레벨이 있는 버프면 해당 레벨
+    displayName: string     // 발현별 변형 등 별도 레벨명이 있으면 그대로 표시
     duration: number | null
     maxStack: number | null
     effectText: string | null
@@ -28,6 +29,7 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
         kind,
         name: src.name,
         level: null,
+        displayName: src.name,
         duration: src.duration,
         maxStack: src.maxStack,
         effectText: src.description,
@@ -43,6 +45,7 @@ const buildEntries = (src: BuffDto | DebuffDto, kind: 'buff' | 'debuff'): [strin
         const entry: EffectEntry = {
             ...base,
             level: lvl.level,
+            displayName: lvl.levelName ?? `${src.name} ${lvl.level}`,
             duration: lvl.duration ?? src.duration,
             maxStack: lvl.maxStack ?? src.maxStack,
             effectText: lvl.effectText ?? src.description,
