@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getCharacterList } from '../api/characterApi'
 import type { CharacterSummaryDto } from '../api/characterApi'
+import { compareByReleaseDate } from '../utils/characterSort'
 
 // ─── 캐릭터 목록 ───────────────────────────────────────────
 // 검색·정렬 한 줄 + 라벨 붙인 칩 필터(속성/등급/진영) + 카드 그리드
@@ -103,11 +104,7 @@ const CharacterList = () => {
                 const d = GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade)
                 return d !== 0 ? d : a.name.localeCompare(b.name, 'ko')
             }
-            // 최신순: 출시일 없는 캐릭터는 뒤로
-            if (!a.releaseDate && !b.releaseDate) return a.name.localeCompare(b.name, 'ko')
-            if (!a.releaseDate) return 1
-            if (!b.releaseDate) return -1
-            return b.releaseDate.localeCompare(a.releaseDate)
+            return compareByReleaseDate(a, b)
         })
     }, [characters, element, grade, faction, search, sort])
 
