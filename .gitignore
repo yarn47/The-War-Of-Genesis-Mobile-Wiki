@@ -25,3 +25,6 @@ dist-ssr
 
 # Env
 .env
+
+# Local audio file unrelated to the wiki
+/평범한 시계소리.mp3
