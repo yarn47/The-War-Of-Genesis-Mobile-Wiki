@@ -28,7 +28,7 @@ const GRADE_COLORS: Record<string, string> = {
 
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
-    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈'
+    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스'
 }
 
 const GRADE_ORDER = ['outer', 'legend', 'hero', 'rare']
