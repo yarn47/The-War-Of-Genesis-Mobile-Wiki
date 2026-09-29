@@ -1,7 +1,8 @@
 // ─── 각성/발현 단계 규칙 (관리자 입력 · 상세 페이지 공통) ────
 
-// 고유 패시브: 각성 3/4/5/6 + 발현 2/4/6 (총 7개)
+// 캐릭터별로 실제 등록된 단계를 사용한다. 희귀 캐릭터는 각성 1·2도 지원.
 export const PASSIVE_LEVELS = [
+    { type: 'awaken', step: 1, label: '각성 1' }, { type: 'awaken', step: 2, label: '각성 2' },
     { type: 'awaken', step: 3, label: '각성 3' }, { type: 'awaken', step: 4, label: '각성 4' },
     { type: 'awaken', step: 5, label: '각성 5' }, { type: 'awaken', step: 6, label: '각성 6' },
     { type: 'manifest', step: 2, label: '발현 2' }, { type: 'manifest', step: 4, label: '발현 4' },

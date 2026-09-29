@@ -260,6 +260,7 @@ export interface CharacterRequest {
     portraitUrl: string | null
     fullImageUrl: string | null
     isPublished: boolean
+    hasManifestation: boolean
     stats: CharacterStatsRequest | null
     classTreeIds: ClassTreeNodeRequest[]
     passive: PassiveRequest | null

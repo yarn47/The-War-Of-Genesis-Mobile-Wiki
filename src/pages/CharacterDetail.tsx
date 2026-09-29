@@ -686,7 +686,7 @@ const CharacterDetail = () => {
                             {character.ultimateSkill.levels.map(lvl => (
                                 <div key={lvl.manifestStep} className="rounded p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${color.border}` }}>
                                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                                        <span className="text-sm font-bold rounded px-2 py-0.5" style={{ background: color.bg, color: color.text }}>발현 {lvl.manifestStep}단</span>
+                                        <span className="text-sm font-bold rounded px-2 py-0.5" style={{ background: color.bg, color: color.text }}>{lvl.manifestStep === 0 ? '기본' : `발현 ${lvl.manifestStep}단`}</span>
                                         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
                                             {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
                                             {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
@@ -709,7 +709,9 @@ const CharacterDetail = () => {
                 )}
 
                 {/* 발현 트리 */}
-                <ManifestationSection character={character} color={color} />
+                {character.manifestations.some(m => m.manifestLevel > 0) && (
+                    <ManifestationSection character={character} color={color} />
+                )}
 
                 {/* 아티팩트 */}
                 {character.artifacts.length > 0 && (

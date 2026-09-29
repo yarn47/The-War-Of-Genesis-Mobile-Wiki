@@ -28,6 +28,7 @@ interface BasicState {
     birthYear: string; height: string; cv: string; releaseDate: string; appearedIn: string; profileText: string
     thumbnailUrl: string; portraitUrl: string; fullImageUrl: string
     isPublished: boolean
+    hasManifestation: boolean
 }
 
 interface StatsState {
@@ -62,7 +63,7 @@ const emptyBasic = (): BasicState => ({
     exclusiveWeaponId: '', exclusiveWeaponName: '',
     birthYear: '', height: '', cv: '', releaseDate: '', appearedIn: '', profileText: '',
     thumbnailUrl: '', portraitUrl: '', fullImageUrl: '',
-    isPublished: false
+    isPublished: false, hasManifestation: true
 })
 
 const emptyStats = (): StatsState => ({
@@ -98,7 +99,8 @@ const detailToStates = (d: CharacterDetailDto) => ({
         birthYear: d.birthYear ?? '', height: d.height ?? '',
         cv: d.cv ?? '', releaseDate: d.releaseDate ?? '', appearedIn: d.appearedIn ?? '', profileText: d.profileText ?? '',
         thumbnailUrl: d.thumbnailUrl ?? '', portraitUrl: d.portraitUrl ?? '',
-        fullImageUrl: d.fullImageUrl ?? '', isPublished: false
+        fullImageUrl: d.fullImageUrl ?? '', isPublished: false,
+        hasManifestation: d.manifestations.some(m => m.manifestLevel > 0)
     } as BasicState,
     stats: {
         hp: d.stats?.hp != null ? String(d.stats.hp) : '',
@@ -144,6 +146,7 @@ const buildRequest = (
     artifacts: ArtifactForm[]
 ): CharacterRequest => ({
     name: basic.name, grade: basic.grade, faction: basic.faction, element: basic.element,
+    hasManifestation: basic.hasManifestation,
     exclusiveWeaponId: toInt(basic.exclusiveWeaponId),
     birthYear: toStr(basic.birthYear), height: toStr(basic.height),
     cv: toStr(basic.cv), releaseDate: toStr(basic.releaseDate), appearedIn: toStr(basic.appearedIn),
@@ -159,12 +162,14 @@ const buildRequest = (
     passive: passive.name.trim() ? {
         name: passive.name, iconUrl: toStr(passive.iconUrl),
         levels: PASSIVE_LEVELS
+            .filter(l => basic.hasManifestation || l.type === 'awaken')
             .filter(l => passive.levels[`${l.type}_${l.step}`]?.trim())
             .map(l => ({ unlockType: l.type, unlockStep: l.step, effectText: passive.levels[`${l.type}_${l.step}`] }))
     } : null,
     ultimate: ultimate.name.trim() ? {
         name: ultimate.name, iconUrl: toStr(ultimate.iconUrl),
         levels: ULTIMATE_STEPS
+            .filter(s => basic.hasManifestation || s === 0)
             .filter(s => ultimate.levels[s]?.effectText?.trim())
             .map(s => ({
                 manifestStep: s,
@@ -175,7 +180,7 @@ const buildRequest = (
                 effectText: toStr(ultimate.levels[s].effectText)
             }))
     } : null,
-    artifacts: artifacts
+    artifacts: (basic.hasManifestation ? artifacts : [])
         .filter(a => a.name.trim())
         .map((art, idx) => ({
             name: art.name, artifactOrder: idx + 1, iconUrl: toStr(art.iconUrl),
@@ -327,7 +332,7 @@ const ClassSection = memo(({ classTreeIds, allClasses, onChange }: {
     )
 })
 
-const PassiveSection = memo(({ state, onChange }: { state: PassiveState; onChange: (s: PassiveState) => void }) => {
+const PassiveSection = memo(({ state, onChange, hasManifestation }: { state: PassiveState; onChange: (s: PassiveState) => void; hasManifestation: boolean }) => {
     const set = (k: keyof PassiveState, v: string) => onChange({ ...state, [k]: v })
     const setLevel = (key: string, v: string) => onChange({ ...state, levels: { ...state.levels, [key]: v } })
     return (
@@ -337,7 +342,7 @@ const PassiveSection = memo(({ state, onChange }: { state: PassiveState; onChang
                 <Field label="아이콘 URL"><Input value={state.iconUrl} onChange={e => set('iconUrl', e.target.value)} placeholder="https://..." /></Field>
             </Grid>
             <div className="mt-4 space-y-3">
-                {PASSIVE_LEVELS.map(l => {
+                {PASSIVE_LEVELS.filter(l => hasManifestation || l.type === 'awaken').map(l => {
                     const key = `${l.type}_${l.step}`
                     return (
                         <div key={key} className="flex items-start gap-3">
@@ -353,21 +358,21 @@ const PassiveSection = memo(({ state, onChange }: { state: PassiveState; onChang
     )
 })
 
-const UltimateSection = memo(({ state, onChange }: { state: UltimateState; onChange: (s: UltimateState) => void }) => {
+const UltimateSection = memo(({ state, onChange, hasManifestation }: { state: UltimateState; onChange: (s: UltimateState) => void; hasManifestation: boolean }) => {
     const set = (k: keyof UltimateState, v: string) => onChange({ ...state, [k]: v })
     const setLevel = (step: number, k: keyof UltimateLevelState, v: string) =>
         onChange({ ...state, levels: { ...state.levels, [step]: { ...state.levels[step], [k]: v } } })
     return (
-        <Section title="⑤ 필살기 (발현)">
+        <Section title="⑤ 필살기">
             <Grid cols={2}>
                 <Field label="필살기 이름" required><Input value={state.name} onChange={e => set('name', e.target.value)} placeholder="필살기 이름" /></Field>
                 <Field label="아이콘 URL"><Input value={state.iconUrl} onChange={e => set('iconUrl', e.target.value)} placeholder="https://..." /></Field>
             </Grid>
             <div className="mt-4 space-y-4">
-                {ULTIMATE_STEPS.map(step => (
+                {ULTIMATE_STEPS.filter(step => hasManifestation || step === 0).map(step => (
                     <ItemBox key={step}>
                         <div className="mb-3">
-                            <span className="rounded bg-purple-900/20 px-2 py-0.5 text-xs font-bold text-purple-400">발현 {step}단</span>
+                            <span className="rounded bg-purple-900/20 px-2 py-0.5 text-xs font-bold text-purple-400">{step === 0 ? '기본' : `발현 ${step}단`}</span>
                         </div>
                         <Grid cols={4}>
                             <Field label="TP 소모"><Input type="number" value={state.levels[step].tpCost} onChange={e => setLevel(step, 'tpCost', e.target.value)} /></Field>
@@ -562,6 +567,11 @@ const CharacterAdmin = () => {
                         <p className="mt-0.5 text-xs text-stone-600">{editingId !== null ? `ID: ${editingId}` : '* 필수 입력'}</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                            <input type="checkbox" checked={basic.hasManifestation}
+                                   onChange={e => setBasic(b => ({ ...b, hasManifestation: e.target.checked }))} />
+                            발현 있음
+                        </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <span className="text-xs text-[var(--text-muted)]">발행</span>
                             <div onClick={() => setBasic(b => ({ ...b, isPublished: !b.isPublished }))}
@@ -596,9 +606,11 @@ const CharacterAdmin = () => {
                 )}
                 {activeSection === 'stats' && <StatsSection state={stats} onChange={setStats} />}
                 {activeSection === 'class' && <ClassSection classTreeIds={classTreeIds} allClasses={allClasses} onChange={setClassTreeIds} />}
-                {activeSection === 'passive' && <PassiveSection state={passive} onChange={setPassive} />}
-                {activeSection === 'ultimate' && <UltimateSection state={ultimate} onChange={setUltimate} />}
-                {activeSection === 'artifact' && <ArtifactSection artifacts={artifacts} onChange={setArtifacts} />}
+                {activeSection === 'passive' && <PassiveSection state={passive} onChange={setPassive} hasManifestation={basic.hasManifestation} />}
+                {activeSection === 'ultimate' && <UltimateSection state={ultimate} onChange={setUltimate} hasManifestation={basic.hasManifestation} />}
+                {activeSection === 'artifact' && (basic.hasManifestation
+                    ? <ArtifactSection artifacts={artifacts} onChange={setArtifacts} />
+                    : <p className="text-stone-400">발현이 없는 캐릭터입니다.</p>)}
 
                 <div className="mb-8 flex justify-end gap-2">
                     <CancelBtn onClick={resetAll} />
