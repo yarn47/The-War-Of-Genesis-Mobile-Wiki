@@ -6,6 +6,7 @@ export interface CharacterSummaryDto {
     name: string
     grade: string
     faction: string
+    subFaction: string | null   // 진영이 두 개인 캐릭터의 두 번째 진영
     element: string
     thumbnailUrl: string | null
     releaseDate: string | null   // 목록 정렬(최신순)용
@@ -158,6 +159,7 @@ export interface CharacterDetailDto {
     name: string
     grade: string
     faction: string
+    subFaction: string | null   // 진영이 두 개인 캐릭터의 두 번째 진영
     element: string
     birthYear: string | null
     height: string | null
@@ -248,6 +250,7 @@ export interface CharacterRequest {
     name: string
     grade: string
     faction: string
+    subFaction: string | null
     element: string
     exclusiveWeaponId: number | null
     birthYear: string | null

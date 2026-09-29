@@ -29,8 +29,13 @@ const GRADE_COLORS: Record<string, string> = {
 
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
-    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드'
+    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드',
+    darkgod: '암흑신'
 }
+
+// 진영이 둘인 캐릭터가 있어서 목록·필터는 두 진영을 모두 본다
+const factionsOf = (c: { faction: string; subFaction: string | null }) =>
+    c.subFaction ? [c.faction, c.subFaction] : [c.faction]
 
 const GRADE_ORDER = ['outer', 'legend', 'hero', 'rare']
 
@@ -86,7 +91,7 @@ const CharacterList = () => {
 
     // 진영 칩은 실제로 등록된 것만
     const factions = useMemo(
-        () => [...new Set(characters.map(c => c.faction))].sort((a, b) =>
+        () => [...new Set(characters.flatMap(factionsOf))].sort((a, b) =>
             (FACTION_LABELS[a] ?? a).localeCompare(FACTION_LABELS[b] ?? b, 'ko')),
         [characters]
     )
@@ -95,7 +100,7 @@ const CharacterList = () => {
         const rows = characters.filter(c =>
             (element === 'all' || c.element === element) &&
             (grade === 'all' || c.grade === grade) &&
-            (faction === 'all' || c.faction === faction) &&
+            (faction === 'all' || factionsOf(c).includes(faction)) &&
             (!search || c.name.includes(search))
         )
         return rows.sort((a, b) => {
@@ -204,7 +209,7 @@ const CharacterList = () => {
                                         </div>
                                         <div className="mt-0.5 truncate text-[11px] text-stone-500">
                                             <span style={{ color: GRADE_COLORS[c.grade] ?? '#A8A29E' }}>{GRADE_LABELS[c.grade] ?? c.grade}</span>
-                                            {' · '}{FACTION_LABELS[c.faction] ?? c.faction}
+                                            {' · '}{factionsOf(c).map(f => FACTION_LABELS[f] ?? f).join(', ')}
                                         </div>
                                     </div>
                                 </button>

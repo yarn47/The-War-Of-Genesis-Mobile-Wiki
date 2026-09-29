@@ -17,13 +17,13 @@ import { PASSIVE_LEVELS, ULTIMATE_STEPS, ARTIFACT_STEPS, MAX_ARTIFACTS } from '.
 // ─── 상수 ──────────────────────────────────────────────────
 
 const GRADES = [{ value: 'rare', label: '희귀' }, { value: 'hero', label: '영웅' }, { value: 'legend', label: '전설' }, { value: 'outer', label: '아우터원' }]
-const FACTIONS = [{ value: 'geysir', label: '게이시르' }, { value: 'pendragon', label: '팬드래건' }, { value: 'independent', label: '무소속' }, { value: 'astania', label: '아스타니아' }, { value: 'zephyrfalcon', label: '제피르팰컨' }, { value: 'dagal', label: '다갈' }, { value: 'curtis', label: '커티스' }, { value: 'garad', label: '가라드' }]
+const FACTIONS = [{ value: 'geysir', label: '게이시르' }, { value: 'pendragon', label: '팬드래건' }, { value: 'independent', label: '무소속' }, { value: 'astania', label: '아스타니아' }, { value: 'zephyrfalcon', label: '제피르팰컨' }, { value: 'dagal', label: '다갈' }, { value: 'curtis', label: '커티스' }, { value: 'garad', label: '가라드' }, { value: 'darkgod', label: '암흑신' }]
 const ELEMENTS = [{ value: 'light', label: '신념의빛' }, { value: 'dark', label: '욕망의그림자' }, { value: 'fire', label: '자유의불꽃' }, { value: 'crystal', label: '지성의결정체' }, { value: 'nature', label: '활력의나무' }]
 
 // ─── 섹션별 state 타입 ─────────────────────────────────────
 
 interface BasicState {
-    name: string; grade: string; faction: string; element: string
+    name: string; grade: string; faction: string; subFaction: string; element: string
     exclusiveWeaponId: string; exclusiveWeaponName: string
     birthYear: string; height: string; cv: string; releaseDate: string; appearedIn: string; profileText: string
     thumbnailUrl: string; portraitUrl: string; fullImageUrl: string
@@ -59,7 +59,7 @@ interface ArtifactForm {
 // ─── 기본값 ────────────────────────────────────────────────
 
 const emptyBasic = (): BasicState => ({
-    name: '', grade: 'legend', faction: 'geysir', element: 'light',
+    name: '', grade: 'legend', faction: 'geysir', subFaction: '', element: 'light',
     exclusiveWeaponId: '', exclusiveWeaponName: '',
     birthYear: '', height: '', cv: '', releaseDate: '', appearedIn: '', profileText: '',
     thumbnailUrl: '', portraitUrl: '', fullImageUrl: '',
@@ -93,7 +93,7 @@ const toInt = (v: string) => v.trim() === '' ? null : parseInt(v)
 
 const detailToStates = (d: CharacterDetailDto) => ({
     basic: {
-        name: d.name, grade: d.grade, faction: d.faction, element: d.element,
+        name: d.name, grade: d.grade, faction: d.faction, subFaction: d.subFaction ?? '', element: d.element,
         exclusiveWeaponId: d.exclusiveWeapon ? String(d.exclusiveWeapon.weaponId) : '',
         exclusiveWeaponName: d.exclusiveWeapon?.name ?? '',
         birthYear: d.birthYear ?? '', height: d.height ?? '',
@@ -145,7 +145,8 @@ const buildRequest = (
     passive: PassiveState, ultimate: UltimateState,
     artifacts: ArtifactForm[]
 ): CharacterRequest => ({
-    name: basic.name, grade: basic.grade, faction: basic.faction, element: basic.element,
+    name: basic.name, grade: basic.grade, faction: basic.faction,
+    subFaction: toStr(basic.subFaction), element: basic.element,
     hasManifestation: basic.hasManifestation,
     exclusiveWeaponId: toInt(basic.exclusiveWeaponId),
     birthYear: toStr(basic.birthYear), height: toStr(basic.height),
@@ -225,6 +226,16 @@ const BasicSection = memo(({ state, onChange, weaponSearch, setWeaponSearch, wea
                     <Field label="속성" required>
                         <Select value={state.element} onChange={e => set('element', e.target.value)}>
                             {ELEMENTS.map(el => <option key={el.value} value={el.value}>{el.label}</option>)}
+                        </Select>
+                    </Field>
+                </Grid>
+            </div>
+            <div className="mt-3">
+                <Grid cols={2}>
+                    <Field label="두 번째 진영">
+                        <Select value={state.subFaction} onChange={e => set('subFaction', e.target.value)}>
+                            <option value="">없음</option>
+                            {FACTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                         </Select>
                     </Field>
                 </Grid>

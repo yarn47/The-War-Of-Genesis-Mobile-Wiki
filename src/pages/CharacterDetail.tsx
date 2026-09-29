@@ -31,8 +31,13 @@ const GRADE_LABELS: Record<string, string> = {
 
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
-    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드'
+    astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드',
+    darkgod: '암흑신'
 }
+
+// 게임 프로필의 "소속 진영" — 이루스처럼 둘인 캐릭터가 있다
+const factionLabel = (faction: string, subFaction: string | null) =>
+    [faction, ...(subFaction ? [subFaction] : [])].map(f => FACTION_LABELS[f] ?? f).join(', ')
 
 const DEFENSE_LABELS: Record<string, string> = { light: '라이트', medium: '미디엄', heavy: '헤비' }
 
@@ -559,7 +564,7 @@ const CharacterDetail = () => {
                         <div className="flex-1 pt-2">
                             <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <span className="text-sm tracking-widest" style={{ color: color.primary }}>
-                                    {GRADE_LABELS[character.grade]} · {FACTION_LABELS[character.faction]}
+                                    {GRADE_LABELS[character.grade]} · {factionLabel(character.faction, character.subFaction)}
                                 </span>
                                 <span className="rounded px-2.5 py-0.5 text-sm font-bold"
                                       style={{ background: color.bg, border: `1px solid ${color.border}`, color: color.text }}>
