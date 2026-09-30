@@ -16,6 +16,7 @@ const navItems = [
         label: '컨텐츠',
         items: [
             { name: '버프/디버프', href: '/buff' },
+            { name: '액티브 스킬', href: '/skills' },
             { name: '아이템', href: '/items' },
             { name: '업데이트', href: '/update' },
         ]
