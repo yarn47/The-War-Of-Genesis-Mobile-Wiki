@@ -39,6 +39,14 @@ const factionsOf = (c: { faction: string; subFaction: string | null }) =>
 
 const GRADE_ORDER = ['outer', 'legend', 'hero', 'rare']
 
+// 목록 카드에서만 원본 초상화의 하단 경계를 숨기고 눈높이를 맞춘다.
+const THUMBNAIL_FRAMING: Record<string, string> = {
+    '/icons/characters/bernstein_thumb.png': 'translateY(-4%) scale(1.08)',
+    '/icons/characters/kashutar_thumb.png': 'scale(1.17)',
+    '/icons/characters/irus_thumb.png': 'scale(1.16)',
+    '/icons/characters/irene_thumb.png': 'scale(1.07)',
+}
+
 type SortKey = 'recent' | 'name' | 'grade'
 
 const SORTS: { key: SortKey; label: string }[] = [
@@ -198,7 +206,9 @@ const CharacterList = () => {
                                 >
                                     <div className="aspect-[3/4] overflow-hidden" style={{ background: color.bg }}>
                                         {c.thumbnailUrl
-                                            ? <img src={c.thumbnailUrl} alt="" className="h-full w-full object-cover object-top transition duration-200 group-hover:scale-[1.03]" />
+                                            ? <div className="h-full w-full" style={{ transform: THUMBNAIL_FRAMING[c.thumbnailUrl], transformOrigin: 'center top' }}>
+                                                <img src={c.thumbnailUrl} alt="" className="h-full w-full object-cover object-top transition duration-200 group-hover:scale-[1.03]" />
+                                            </div>
                                             : <div className="flex h-full w-full items-center justify-center text-xs text-stone-700">No Image</div>}
                                     </div>
                                     <div className="px-2.5 py-2">
