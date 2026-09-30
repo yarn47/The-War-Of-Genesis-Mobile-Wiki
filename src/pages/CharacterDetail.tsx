@@ -15,6 +15,8 @@ const PORTRAIT_FRAMING: Record<string, string> = {
     '/icons/characters/kashutar_portrait.png': 'scale(1.17)',
     '/icons/characters/irus_portrait.png': 'scale(1.16)',
     '/icons/characters/irene_portrait.png': 'scale(1.11)',
+    '/icons/characters/alcion_portrait.png': 'scale(1.15)',
+    '/icons/characters/gishne_portrait.png': 'scale(1.12)',
 }
 
 // ─── 속성 색상 ─────────────────────────────────────────────

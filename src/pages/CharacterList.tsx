@@ -45,6 +45,8 @@ const THUMBNAIL_FRAMING: Record<string, string> = {
     '/icons/characters/kashutar_thumb.png': 'scale(1.17)',
     '/icons/characters/irus_thumb.png': 'scale(1.16)',
     '/icons/characters/irene_thumb.png': 'scale(1.07)',
+    '/icons/characters/alcion_thumb.png': 'scale(1.15)',
+    '/icons/characters/gishne_thumb.png': 'scale(1.12)',
 }
 
 type SortKey = 'recent' | 'name' | 'grade'
