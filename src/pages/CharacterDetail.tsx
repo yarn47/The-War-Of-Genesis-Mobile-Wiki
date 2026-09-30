@@ -482,7 +482,9 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                         <img
                                             src={icon}
                                             alt=""
-                                            className={isSkill
+                                            className={icon === '/icons/passives/steel_guardian.png'
+                                                ? 'h-full w-full origin-center scale-[1.10] -translate-y-px translate-x-px object-cover'
+                                                : isSkill
                                                 ? `h-full w-full origin-center scale-[1.18] -translate-y-px object-cover ${node.type === 'passive' ? '-translate-x-px' : 'translate-x-px'}`
                                                 : 'h-full w-full object-contain'}
                                         />

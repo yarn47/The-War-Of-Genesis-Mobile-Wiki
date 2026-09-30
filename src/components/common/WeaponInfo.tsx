@@ -9,7 +9,7 @@ export type Palette = { primary: string; bg: string; border: string; text: strin
 const GRADE_LABELS: Record<string, string> = { rare: '희귀', hero: '영웅', legend: '전설', outer: '아우터원' }
 
 // baseStats: [{ step, maxHp, attack, critRate, physPen }] 형태의 JSON 문자열
-type WeaponStep = { step: number; maxHp?: number; attack?: number; spellAttack?: number; critRate?: number; physPen?: number; magicPen?: number }
+type WeaponStep = { step: number; maxHp?: number; attack?: number; spellAttack?: number; defense?: number; critRate?: number; physPen?: number; magicPen?: number }
 
 const parseWeaponStats = (json: string | null): WeaponStep[] => {
     if (!json) return []
@@ -41,6 +41,7 @@ const WeaponInfo = ({ weapon, color }: { weapon: ExclusiveWeaponDto; color: Pale
         { key: 'maxHp', label: '최대 체력', fmt: (v: number) => v.toLocaleString() },
         { key: 'attack', label: '공격력', fmt: (v: number) => v.toLocaleString() },
         { key: 'spellAttack', label: '주문력', fmt: (v: number) => v.toLocaleString() },
+        { key: 'defense', label: '방어력', fmt: (v: number) => v.toLocaleString() },
         { key: 'critRate', label: '치명타 확률', fmt: (v: number) => `+${v}%` },
         { key: 'physPen', label: '물리 관통', fmt: (v: number) => `+${v}%` },
         { key: 'magicPen', label: '마법 관통', fmt: (v: number) => `+${v}%` },
