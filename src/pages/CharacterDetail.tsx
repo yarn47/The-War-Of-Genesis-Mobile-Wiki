@@ -9,6 +9,14 @@ import { getTagColorClass } from '../constants/tagColors'
 import WeaponInfo from '../components/common/WeaponInfo'
 import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_TREE_STEPS, STAT_BOOST_STEPS, STAT_BOOST_TEXT } from '../constants/manifest'
 
+// 상세 초상화의 하단 원본 경계를 프레임 밖으로 숨긴다. 목록과는 별도 조정.
+const PORTRAIT_FRAMING: Record<string, string> = {
+    '/icons/characters/bernstein_portrait.png': 'translateY(-2%) scale(1.14)',
+    '/icons/characters/kashutar_portrait.png': 'scale(1.17)',
+    '/icons/characters/irus_portrait.png': 'scale(1.16)',
+    '/icons/characters/irene_portrait.png': 'scale(1.11)',
+}
+
 // ─── 속성 색상 ─────────────────────────────────────────────
 
 const ELEMENT_COLORS: Record<string, { primary: string; secondary: string; bg: string; border: string; text: string; glow: string }> = {
@@ -552,7 +560,9 @@ const CharacterDetail = () => {
                         {/* 이미지 */}
                         <div className="shrink-0 relative">
                             {character.portraitUrl ? (
-                                <img src={character.portraitUrl} className="w-56 h-72 object-cover rounded" style={{ border: `2px solid ${color.border}`, boxShadow: `0 0 30px ${color.glow}` }} />
+                                <div className="w-56 h-72 overflow-hidden rounded" style={{ border: `2px solid ${color.border}`, boxShadow: `0 0 30px ${color.glow}` }}>
+                                    <img src={character.portraitUrl} alt={character.name} className="h-full w-full object-cover" style={{ transform: PORTRAIT_FRAMING[character.portraitUrl], transformOrigin: 'center top', objectPosition: PORTRAIT_FRAMING[character.portraitUrl] ? 'center top' : undefined }} />
+                                </div>
                             ) : (
                                 <div className="w-56 h-72 rounded flex items-center justify-center text-stone-700" style={{ border: `2px solid ${color.border}`, background: 'rgba(0,0,0,0.4)' }}>
                                     No Image
