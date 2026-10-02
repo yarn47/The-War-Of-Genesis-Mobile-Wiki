@@ -42,7 +42,7 @@ const GRADE_LABELS: Record<string, string> = {
 const FACTION_LABELS: Record<string, string> = {
     geysir: '게이시르', pendragon: '팬드래건', independent: '무소속',
     astania: '아스타니아', zephyrfalcon: '제피르팰컨', dagal: '다갈', curtis: '커티스', garad: '가라드',
-    darkgod: '암흑신', kashmir: '카슈미르', bifrost: '비프로스트'
+    darkgod: '암흑신', kashmir: '카슈미르', bifrost: '비프로스트', cyrus: '사이럽스'
 }
 
 // 게임 프로필의 "소속 진영" — 이루스처럼 둘인 캐릭터가 있다
