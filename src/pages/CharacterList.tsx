@@ -41,12 +41,24 @@ const GRADE_ORDER = ['outer', 'legend', 'hero', 'rare']
 
 // 목록 카드에서만 원본 초상화의 하단 경계를 숨기고 눈높이를 맞춘다.
 const THUMBNAIL_FRAMING: Record<string, string> = {
+    '/icons/characters/nina_thumb.png': 'scale(1.20)',
+    '/icons/characters/rubens_thumb.png': 'translateY(-2%) scale(1.28)',
+    '/icons/characters/dalia_thumb.png': 'translateX(-4%) scale(1.10)',
+    '/icons/characters/landam_thumb.png': 'scale(1.20)',
+    '/icons/characters/morgaina_thumb.png': 'scale(1.20)',
+    '/icons/characters/cecily_thumb.png': 'scale(1.20)',
+    '/icons/characters/shuan_thumb.png': 'translateY(-2%) scale(1.23)',
+    '/icons/characters/cindy_thumb.png': 'translateY(-3%) scale(1.30)',
+    '/icons/characters/erich_thumb.png': 'scale(1.18)',
+    '/icons/characters/cameo_thumb.png': 'translateY(-7%) scale(1.48)',
+    '/icons/characters/claris_thumb.png': 'translateY(-2%) scale(1.25)',
+    '/icons/characters/gs_thumb.png': 'translate(3%, -6%) scale(1.25)',
     '/icons/characters/bernstein_thumb.png': 'translateY(-4%) scale(1.08)',
     '/icons/characters/kashutar_thumb.png': 'scale(1.17)',
     '/icons/characters/irus_thumb.png': 'scale(1.16)',
     '/icons/characters/irene_thumb.png': 'scale(1.07)',
     '/icons/characters/alcion_thumb.png': 'scale(1.15)',
-    '/icons/characters/gishne_thumb.png': 'scale(1.12)',
+    '/icons/characters/gishne_thumb.png': 'translateX(4%) scale(1.12)',
 }
 
 type SortKey = 'recent' | 'name' | 'grade'

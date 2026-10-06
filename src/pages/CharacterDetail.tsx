@@ -11,12 +11,24 @@ import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS,
 
 // 상세 초상화의 하단 원본 경계를 프레임 밖으로 숨긴다. 목록과는 별도 조정.
 const PORTRAIT_FRAMING: Record<string, string> = {
+    '/icons/characters/nina_portrait.png': 'scale(1.20)',
+    '/icons/characters/rubens_portrait.png': 'translateY(-2%) scale(1.28)',
+    '/icons/characters/dalia_portrait.png': 'translateX(-4%) scale(1.10)',
+    '/icons/characters/landam_portrait.png': 'scale(1.20)',
+    '/icons/characters/morgaina_portrait.png': 'scale(1.20)',
+    '/icons/characters/cecily_portrait.png': 'scale(1.20)',
+    '/icons/characters/shuan_portrait.png': 'translateY(-2%) scale(1.23)',
+    '/icons/characters/cindy_portrait.png': 'translateY(-3%) scale(1.30)',
+    '/icons/characters/erich_portrait.png': 'scale(1.18)',
+    '/icons/characters/cameo_portrait.png': 'translateY(-7%) scale(1.48)',
+    '/icons/characters/claris_portrait.png': 'translateY(-2%) scale(1.25)',
+    '/icons/characters/gs_portrait.png': 'translate(3%, -6%) scale(1.25)',
     '/icons/characters/bernstein_portrait.png': 'translateY(-2%) scale(1.14)',
     '/icons/characters/kashutar_portrait.png': 'scale(1.17)',
     '/icons/characters/irus_portrait.png': 'scale(1.16)',
     '/icons/characters/irene_portrait.png': 'scale(1.11)',
     '/icons/characters/alcion_portrait.png': 'scale(1.15)',
-    '/icons/characters/gishne_portrait.png': 'scale(1.12)',
+    '/icons/characters/gishne_portrait.png': 'translateX(4%) scale(1.12)',
 }
 
 // ─── 속성 색상 ─────────────────────────────────────────────
