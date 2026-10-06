@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Header from './components/layout/Header'
 import Sidebar, { MobileNav } from './components/layout/Sidebar'
 import Footer from './components/layout/Footer'
+import RouteScrollRestoration from './components/layout/RouteScrollRestoration'
 import Home from './pages/Home'
 import CharacterDetail from './pages/CharacterDetail'
 import CharacterList from './pages/CharacterList'
@@ -39,6 +40,7 @@ function App() {
 
     return (
         <BrowserRouter>
+            <RouteScrollRestoration />
             <div className="relative min-h-screen overflow-x-hidden" data-theme={theme}>
                 <div className="bg-theme fixed inset-0 z-0" style={{ filter: 'var(--bg-filter)' }} />
                 <div className="fixed inset-0 z-0" style={{ background: 'var(--overlay-gradient)' }} />
