@@ -57,7 +57,7 @@ const ItemList = () => {
                                 >
                                     <div className="aspect-square overflow-hidden" style={{ background: `${gradeColor}14` }}>
                                         {w.iconUrl ? (
-                                            <img src={w.iconUrl} alt="" className="w-full h-full object-cover" />
+                                            <img src={w.iconUrl} alt="" className="w-full h-full object-contain" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-stone-700 text-xs">No Image</div>
                                         )}
