@@ -7,6 +7,7 @@ import ElementBadge from '../components/common/ElementBadge'
 import { EffectDictProvider } from '../components/common/EffectDict'
 import { getTagColorClass } from '../constants/tagColors'
 import WeaponInfo from '../components/common/WeaponInfo'
+import { resolveClassTreeParents } from '../utils/classTreeParents'
 import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS, MANIFEST_TREE_STEPS, STAT_BOOST_STEPS, STAT_BOOST_TEXT } from '../constants/manifest'
 
 // 상세 초상화의 하단 원본 경계를 프레임 밖으로 숨긴다. 목록과는 별도 조정.
@@ -214,10 +215,11 @@ const ClassTreeSection = ({ classTree, color }: { classTree: CharacterDetailDto[
     const byOrder = (a: ClassTreeNodeDto, b: ClassTreeNodeDto) =>
         a.tier - b.tier || (a.orderInTier ?? 0) - (b.orderInTier ?? 0)
 
-    const ids = new Set(classTree.map(c => c.classId))
+    const displayTree = resolveClassTreeParents(classTree)
+    const ids = new Set(displayTree.map(c => c.classId))
     // 부모가 트리 안에 없으면 뿌리로 취급
-    const roots = classTree.filter(c => c.parentClassId == null || !ids.has(c.parentClassId)).sort(byOrder)
-    const childrenOf = (id: number) => classTree.filter(c => c.parentClassId === id).sort(byOrder)
+    const roots = displayTree.filter(c => c.parentClassId == null || !ids.has(c.parentClassId)).sort(byOrder)
+    const childrenOf = (id: number) => displayTree.filter(c => c.parentClassId === id).sort(byOrder)
     const { placed, width, height } = layoutClassTree(roots, childrenOf)
 
     // 처음엔 1티어(로그)를 펼쳐둔다
