@@ -41,6 +41,14 @@ const GRADE_ORDER = ['outer', 'legend', 'hero', 'rare']
 
 // 목록 카드에서만 원본 초상화의 하단 경계를 숨기고 눈높이를 맞춘다.
 const THUMBNAIL_FRAMING: Record<string, string> = {
+    '/icons/characters/dunamis_rembrant_thumb.png': 'scale(1.14)',
+    '/icons/characters/may_nautilen_thumb.png': 'scale(1.24)',
+    '/icons/characters/karim_nidia_thumb.png': 'scale(1.14)',
+    '/icons/characters/erica_myers_thumb.png': 'scale(1.14)',
+    '/icons/characters/nangcheon_thumb.png': 'scale(1.12)',
+    '/icons/characters/crow_thumb.png': 'translateY(5%) scale(0.92)',
+    '/icons/characters/sara_randgrid_thumb.png': 'scale(1.10)',
+    '/icons/characters/lacid_thumb.png': 'translateY(3%)',
     '/icons/characters/nina_thumb.png': 'scale(1.20)',
     '/icons/characters/rubens_thumb.png': 'translateY(-2%) scale(1.28)',
     '/icons/characters/dalia_thumb.png': 'translateX(-4%) scale(1.10)',
@@ -218,7 +226,7 @@ const CharacterList = () => {
                                         e.currentTarget.style.boxShadow = 'none'
                                     }}
                                 >
-                                    <div className="aspect-[3/4] overflow-hidden" style={{ background: color.bg }}>
+                                    <div className="aspect-[3/4] overflow-hidden" style={{ background: c.thumbnailUrl === '/icons/characters/lacid_thumb.png' ? '#e9e8e3' : color.bg }}>
                                         {c.thumbnailUrl
                                             ? <div className="h-full w-full" style={{ transform: THUMBNAIL_FRAMING[c.thumbnailUrl], transformOrigin: 'center top' }}>
                                                 <img src={c.thumbnailUrl} alt="" className="h-full w-full object-cover object-top transition duration-200 group-hover:scale-[1.03]" />

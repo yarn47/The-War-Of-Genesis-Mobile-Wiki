@@ -12,6 +12,14 @@ import { PASSIVE_LEVELS, ULTIMATE_STEPS, PASSIVE_MANIFEST_STEPS, ARTIFACT_STEPS,
 
 // 상세 초상화의 하단 원본 경계를 프레임 밖으로 숨긴다. 목록과는 별도 조정.
 const PORTRAIT_FRAMING: Record<string, string> = {
+    '/icons/characters/dunamis_rembrant_portrait.png': 'scale(1.14)',
+    '/icons/characters/may_nautilen_portrait.png': 'scale(1.24)',
+    '/icons/characters/karim_nidia_portrait.png': 'scale(1.14)',
+    '/icons/characters/erica_myers_portrait.png': 'scale(1.14)',
+    '/icons/characters/nangcheon_portrait.png': 'scale(1.12)',
+    '/icons/characters/crow_portrait.png': 'translateY(5%) scale(0.92)',
+    '/icons/characters/sara_randgrid_portrait.png': 'scale(1.10)',
+    '/icons/characters/lacid_portrait.png': 'translateY(3%)',
     '/icons/characters/nina_portrait.png': 'scale(1.20)',
     '/icons/characters/rubens_portrait.png': 'translateY(-2%) scale(1.28)',
     '/icons/characters/dalia_portrait.png': 'translateX(-4%) scale(1.10)',
@@ -578,7 +586,7 @@ const CharacterDetail = () => {
                         {/* 이미지 */}
                         <div className="shrink-0 relative">
                             {character.portraitUrl ? (
-                                <div className="w-56 h-72 overflow-hidden rounded" style={{ border: `2px solid ${color.border}`, boxShadow: `0 0 30px ${color.glow}` }}>
+                                <div className="w-56 h-72 overflow-hidden rounded" style={{ border: `2px solid ${color.border}`, boxShadow: `0 0 30px ${color.glow}`, background: character.portraitUrl === '/icons/characters/lacid_portrait.png' ? '#e9e8e3' : undefined }}>
                                     <img src={character.portraitUrl} alt={character.name} className="h-full w-full object-cover" style={{ transform: PORTRAIT_FRAMING[character.portraitUrl], transformOrigin: 'center top', objectPosition: PORTRAIT_FRAMING[character.portraitUrl] ? 'center top' : undefined }} />
                                 </div>
                             ) : (
