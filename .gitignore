@@ -28,3 +28,6 @@ dist-ssr
 
 # Local audio file unrelated to the wiki
 /평범한 시계소리.mp3
+
+# Local source screenshots retained for image recropping
+/.local-reference/
