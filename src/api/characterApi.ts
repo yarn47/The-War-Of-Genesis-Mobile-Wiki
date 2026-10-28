@@ -175,6 +175,7 @@ export interface CharacterDetailDto {
     classTree: ClassTreeNodeDto[]
     passive: CharacterPassiveDto | null
     ultimateSkill: UltimateSkillDto | null
+    outerSkill?: UltimateSkillDto | null
     artifacts: ArtifactDto[]
     manifestations: CharacterManifestationDto[]
     exclusiveWeapon: ExclusiveWeaponDto | null

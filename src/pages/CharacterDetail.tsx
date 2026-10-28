@@ -338,9 +338,6 @@ const MANIFEST_ROW_H = 76
 const MANIFEST_GUTTER = 48   // 왼쪽 단계 번호 자리
 
 const ManifestationSection = ({ character, color }: { character: CharacterDetailDto; color: ElementColor }) => {
-    const getUltimateLevel = (step: number) =>
-        character.ultimateSkill?.levels.find(l => l.manifestStep === step)
-
     const getPassiveLevel = (step: number) =>
         character.passive?.levels.find(l => l.unlockType === 'manifest' && l.unlockStep === step)
 
@@ -349,10 +346,11 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
         character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
 
     // 번스타인처럼 필살기가 없는 캐릭터는 빈 버튼/열을 만들지 않는다.
-    const passiveCol = character.ultimateSkill ? 1 : 0
+    const hasActive = !!(character.ultimateSkill || character.outerSkill)
+    const passiveCol = hasActive ? 1 : 0
     const commonCol = passiveCol + (character.passive ? 1 : 0)
     const nodes: ManifestNode[] = [
-        ...(character.ultimateSkill ? ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })) : []),
+        ...(hasActive ? ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })) : []),
         ...(character.passive ? PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: passiveCol })) : []),
         ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: commonCol })),
         ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: commonCol })),
@@ -370,7 +368,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
     const height = (MANIFEST_TREE_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
 
     const nodeIcon = (node: ManifestNode) => {
-        if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl
+        if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl ?? character.outerSkill?.iconUrl
         if (node.type === 'passive') return character.passive?.iconUrl
         return MANIFEST_ICONS[node.type]
     }
@@ -390,35 +388,39 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
         )
 
         if (type === 'ultimate') {
-            const lvl = getUltimateLevel(step)
             return (
-                <>
-                    <div className="mb-2 flex items-center gap-2.5">
-                        {character.ultimateSkill?.iconUrl && <img src={character.ultimateSkill.iconUrl} alt="" className="w-9 h-9 rounded" />}
-                        <span className="font-semibold text-base" style={{ color: color.text }}>{character.ultimateSkill?.name ?? '필살기 없음'}</span>
-                        <ElementBadge element={character.ultimateSkill?.element} />
-                        <span className="text-sm text-stone-500">발현 {step}단</span>
-                    </div>
-                    {lvl ? (
-                        <div className="space-y-2">
-                            <div className="flex gap-4 text-sm text-stone-400">
-                                {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
-                                {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
-                                {character.ultimateSkill?.area && <span>{character.ultimateSkill.area}</span>}
-                                {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
-                                {character.ultimateSkill?.attackType && <span>공격타입 {character.ultimateSkill.attackType}</span>}
+                <div className="space-y-5">
+                    {[character.ultimateSkill, character.outerSkill].filter(skill => skill != null).map(skill => {
+                        const lvl = skill.levels.find(level => level.manifestStep === step)
+                        return <div key={skill.ultimateId}>
+                            <div className="mb-2 flex items-center gap-2.5">
+                                {skill?.iconUrl && <img src={skill.iconUrl} alt="" className="w-9 h-9 rounded" />}
+                                <span className="font-semibold text-base" style={{ color: color.text }}>{skill?.name ?? '필살기 없음'}</span>
+                                <ElementBadge element={skill?.element} />
+                                <span className="text-sm text-stone-500">발현 {step}단</span>
                             </div>
-                            {(character.ultimateSkill?.tags?.length ?? 0) > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                    {character.ultimateSkill!.tags.map(tag => (
-                                        <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
-                                    ))}
+                            {lvl ? (
+                                <div className="space-y-2">
+                                    <div className="flex gap-4 text-sm text-stone-400">
+                                        {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
+                                        {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
+                                        {skill?.area && <span>{skill.area}</span>}
+                                        {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
+                                        {skill?.attackType && <span>공격타입 {skill.attackType}</span>}
+                                    </div>
+                                    {(skill?.tags?.length ?? 0) > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {skill!.tags.map(tag => (
+                                                <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {lvl.effectText && <div className="text-sm text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
                                 </div>
-                            )}
-                            {lvl.effectText && <div className="text-sm text-stone-300 leading-relaxed"><EffectText text={lvl.effectText} /></div>}
+                            ) : <div className="text-sm text-stone-500">효과 없음</div>}
                         </div>
-                    ) : <div className="text-sm text-stone-500">효과 없음</div>}
-                </>
+                    })}
+                </div>
             )
         }
 
@@ -486,14 +488,14 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                 <button
                                     key={`${node.type}_${node.step}`}
                                     type="button"
-                                    aria-label={`${MANIFEST_LABELS[node.type]} 발현 ${node.step}단`}
+                                    aria-label={`${node.type === 'ultimate' && character.outerSkill ? '액티브' : MANIFEST_LABELS[node.type]} 발현 ${node.step}단`}
                                     aria-pressed={on}
                                     onClick={() => setSelected(node)}
                                     className="absolute flex flex-col items-center justify-center gap-1"
                                     style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W, height: MANIFEST_ICON }}
                                 >
                                     <span
-                                        title={MANIFEST_LABELS[node.type]}
+                                        title={node.type === 'ultimate' && character.outerSkill ? '액티브' : MANIFEST_LABELS[node.type]}
                                         className="flex items-center justify-center overflow-hidden rounded-full transition"
                                         style={{
                                             width: iconSize, height: iconSize,
@@ -716,15 +718,19 @@ const CharacterDetail = () => {
                 {/* 액티브 스킬 */}
                 <ActiveSkillSection classTree={character.classTree} color={color} />
 
-                {/* 필살기 */}
-                {character.ultimateSkill && (
-                    <SectionBox title="필살기" color={color}>
+                {/* 필살기와 아우터원 전용 스킬은 독립적으로 표시한다. */}
+                {[character.ultimateSkill, character.outerSkill].map((skill, index) => skill && (
+                    <SectionBox key={index} title={index === 0 ? "필살기" : "아우터원 스킬"} color={color}>
                         <div className="mb-3 flex items-center gap-2.5">
-                            {character.ultimateSkill.iconUrl && <img src={character.ultimateSkill.iconUrl} className="w-11 h-11 rounded" />}
-                            <span className="font-semibold text-base" style={{ color: color.text }}>{character.ultimateSkill.name}</span>
+                            {skill.iconUrl && <img src={skill.iconUrl} className="w-11 h-11 rounded" />}
+                            <span className="font-semibold text-base" style={{ color: color.text }}>{skill.name}</span>
+                            <ElementBadge element={skill.element} />
                         </div>
+                        {index === 1 && !skill.levels.some(level => level.manifestStep === 0) && (
+                            <p className="mb-3 text-xs text-stone-400">노발현 효과는 자료 확인 중입니다.</p>
+                        )}
                         <div className="space-y-3">
-                            {character.ultimateSkill.levels.map(lvl => (
+                            {skill.levels.map(lvl => (
                                 <div key={lvl.manifestStep} className="rounded p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${color.border}` }}>
                                     <div className="flex flex-wrap items-center gap-2 mb-2">
                                         <span className="text-sm font-bold rounded px-2 py-0.5" style={{ background: color.bg, color: color.text }}>{lvl.manifestStep === 0 ? '기본' : `발현 ${lvl.manifestStep}단`}</span>
@@ -732,12 +738,13 @@ const CharacterDetail = () => {
                                             {lvl.tpCost != null && <span>TP {lvl.tpCost}</span>}
                                             {lvl.rangeMin != null && <span>사거리 {rangeLabel(lvl.rangeMin, lvl.rangeMax)}</span>}
                                             {lvl.cooldown != null && <span>쿨타임 {lvl.cooldown}턴</span>}
-                                            {character.ultimateSkill?.attackType && <span>공격타입 {character.ultimateSkill.attackType}</span>}
+                                            {skill.area && <span>{skill.area}</span>}
+                                            {skill?.attackType && <span>공격타입 {skill.attackType}</span>}
                                         </div>
                                     </div>
-                                    {(character.ultimateSkill?.tags?.length ?? 0) > 0 && (
+                                    {(skill?.tags?.length ?? 0) > 0 && (
                                         <div className="mb-2 flex flex-wrap gap-1">
-                                            {character.ultimateSkill!.tags.map(tag => (
+                                            {skill!.tags.map(tag => (
                                                 <span key={tag.tagId} className={`rounded px-1.5 py-0.5 text-[11px] ${getTagColorClass(tag.color)}`}>{tag.name}</span>
                                             ))}
                                         </div>
@@ -747,7 +754,7 @@ const CharacterDetail = () => {
                             ))}
                         </div>
                     </SectionBox>
-                )}
+                ))}
 
                 {/* 발현 트리 */}
                 {character.manifestations.some(m => m.manifestLevel > 0) && (
