@@ -318,17 +318,19 @@ const ActiveSkillSection = ({ classTree, color }: { classTree: ClassTreeNodeDto[
 // 게임 발현 화면과 같은 배치: 필살기 | 고유 패시브 | 능력치 강화·아티팩트
 // 단계 규칙은 constants/manifest.ts (필살기 0/1/3/5 · 패시브 2/4/6 · 아티팩트 3~6 · 능력치 1/2)
 
-type ManifestItemType = 'ultimate' | 'passive' | 'stat' | 'artifact'
+type ManifestItemType = 'ultimate' | 'outer' | 'passive' | 'stat' | 'artifact' | 'exclusiveArtifact'
 type ManifestNode = { type: ManifestItemType; step: number; col: number }
 
 const MANIFEST_LABELS: Record<ManifestItemType, string> = {
     ultimate: '필살기', passive: '고유 패시브', stat: '능력치 강화', artifact: '아티팩트',
+    outer: '액티브', exclusiveArtifact: '전용 아티팩트',
 }
 
 // 게임에서 딴 공용 아이콘 (캐릭터마다 같은 그림)
 const MANIFEST_ICONS: Partial<Record<ManifestItemType, string>> = {
     stat: '/icons/manifest/stat_boost.png',
     artifact: '/icons/manifest/artifact.png',
+    exclusiveArtifact: '/icons/manifest/artifact.png',
 }
 
 const MANIFEST_ICON = 56
@@ -338,18 +340,28 @@ const MANIFEST_ROW_H = 76
 const MANIFEST_GUTTER = 48   // 왼쪽 단계 번호 자리
 
 const ManifestationSection = ({ character, color }: { character: CharacterDetailDto; color: ElementColor }) => {
+    const isOuter = character.grade === 'outer'
     const getPassiveLevel = (step: number) =>
         character.passive?.levels.find(l => l.unlockType === 'manifest' && l.unlockStep === step)
 
     // 아티팩트는 최대 4개, 각 아티팩트가 단계별 효과를 가짐
-    const getArtifactsAt = (step: number) =>
-        character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step))
+    // 아우터원의 네 번째 슬롯은 6단 전용 아티팩트로 독립한다.
+    const getArtifactsAt = (step: number, exclusive: boolean) =>
+        character.artifacts.filter(a => a.levels.some(l => l.manifestStep === step)
+            && (!isOuter || (a.artifactOrder === 4) === exclusive))
 
     // 번스타인처럼 필살기가 없는 캐릭터는 빈 버튼/열을 만들지 않는다.
     const hasActive = !!(character.ultimateSkill || character.outerSkill)
     const passiveCol = hasActive ? 1 : 0
     const commonCol = passiveCol + (character.passive ? 1 : 0)
-    const nodes: ManifestNode[] = [
+    const nodes: ManifestNode[] = isOuter ? [
+        ...(character.outerSkill ? [1, 3, 5].map(step => ({ type: 'outer' as const, step, col: 0 })) : []),
+        ...(character.passive ? [2, 4, 6].map(step => ({ type: 'passive' as const, step, col: 1 })) : []),
+        { type: 'stat', step: 2, col: 2 },
+        ...ARTIFACT_STEPS.map(step => ({ type: 'artifact' as const, step, col: 2 })),
+        { type: 'exclusiveArtifact', step: 6, col: 3 },
+        ...(character.ultimateSkill ? [1, 3, 5].map(step => ({ type: 'ultimate' as const, step, col: 4 })) : []),
+    ] : [
         ...(hasActive ? ULTIMATE_STEPS.filter(step => step > 0).map(step => ({ type: 'ultimate' as const, step, col: 0 })) : []),
         ...(character.passive ? PASSIVE_MANIFEST_STEPS.map(step => ({ type: 'passive' as const, step, col: passiveCol })) : []),
         ...STAT_BOOST_STEPS.map(step => ({ type: 'stat' as const, step, col: commonCol })),
@@ -364,11 +376,13 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
         y: MANIFEST_TREE_STEPS.indexOf(node.step) * MANIFEST_ROW_H,
     })
 
-    const width = MANIFEST_GUTTER + (commonCol + 1) * MANIFEST_COL_W
+    const width = MANIFEST_GUTTER + (isOuter ? 5 : commonCol + 1) * MANIFEST_COL_W
     const height = (MANIFEST_TREE_STEPS.length - 1) * MANIFEST_ROW_H + MANIFEST_ICON + 8
 
     const nodeIcon = (node: ManifestNode) => {
         if (node.type === 'ultimate') return character.ultimateSkill?.iconUrl ?? character.outerSkill?.iconUrl
+        if (node.type === 'outer') return character.outerSkill?.iconUrl
+        if (node.type === 'exclusiveArtifact') return character.artifacts.find(a => a.artifactOrder === 4)?.iconUrl ?? MANIFEST_ICONS.exclusiveArtifact
         if (node.type === 'passive') return character.passive?.iconUrl
         return MANIFEST_ICONS[node.type]
     }
@@ -387,10 +401,10 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
             </>
         )
 
-        if (type === 'ultimate') {
+        if (type === 'ultimate' || type === 'outer') {
             return (
                 <div className="space-y-5">
-                    {[character.ultimateSkill, character.outerSkill].filter(skill => skill != null).map(skill => {
+                    {[type === 'outer' ? character.outerSkill : character.ultimateSkill].filter(skill => skill != null).map(skill => {
                         const lvl = skill.levels.find(level => level.manifestStep === step)
                         return <div key={skill.ultimateId}>
                             <div className="mb-2 flex items-center gap-2.5">
@@ -440,10 +454,10 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
             )
         }
 
-        const artifacts = getArtifactsAt(step)
+        const artifacts = getArtifactsAt(step, type === 'exclusiveArtifact')
         return artifacts.length > 0 ? (
             <>
-                <div className="text-sm text-stone-400 mb-3">발현 {step}단 아티팩트</div>
+                <div className="text-sm text-stone-400 mb-3">발현 {step}단 {MANIFEST_LABELS[type]}</div>
                 <div className="space-y-3">
                     {artifacts.map(art => {
                         const lvl = art.levels.find(l => l.manifestStep === step)
@@ -471,6 +485,31 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                 <div className="overflow-x-auto pb-2 lg:shrink-0">
                     <div className="relative" style={{ width, height }}>
                         <svg className="pointer-events-none absolute inset-0" width={width} height={height}>
+                            {isOuter && (() => {
+                                const point = (type: ManifestItemType, step: number) => {
+                                    const node = nodes.find(n => n.type === type && n.step === step)
+                                    if (!node) return null
+                                    const p = pos(node)
+                                    return { x: p.x, y: p.y + MANIFEST_ICON / 2 }
+                                }
+                                const edges: [ManifestItemType, number, ManifestItemType, number, boolean?][] = [
+                                    ['outer', 1, 'outer', 3], ['outer', 3, 'outer', 5],
+                                    ['outer', 1, 'passive', 2], ['passive', 2, 'artifact', 3],
+                                    ['passive', 2, 'passive', 4], ['passive', 4, 'passive', 6],
+                                    ['stat', 2, 'artifact', 3], ['artifact', 3, 'artifact', 4],
+                                    ['artifact', 4, 'artifact', 5], ['artifact', 5, 'artifact', 6],
+                                    ['artifact', 6, 'exclusiveArtifact', 6],
+                                    ['ultimate', 1, 'ultimate', 3], ['ultimate', 3, 'ultimate', 5],
+                                    ['ultimate', 1, 'passive', 2, true],
+                                ]
+                                return edges.map(([from, fs, to, ts, elbow]) => {
+                                    const a = point(from, fs), b = point(to, ts)
+                                    if (!a || !b) return null
+                                    return <path key={`${from}${fs}-${to}${ts}`}
+                                        d={`M ${a.x} ${a.y} ${elbow ? `H ${b.x} V ${b.y}` : `L ${b.x} ${b.y}`}`}
+                                        fill="none" stroke={color.primary} strokeWidth={2} strokeOpacity={0.7} />
+                                })
+                            })()}
                             {/* 단계 구분선 */}
                             {MANIFEST_TREE_STEPS.map((step, i) => (
                                 <line key={`row_${step}`} x1={0} y1={i * MANIFEST_ROW_H - 10} x2={width} y2={i * MANIFEST_ROW_H - 10}
@@ -482,20 +521,20 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                             const { x, y } = pos(node)
                             const icon = nodeIcon(node)
                             const on = isSelected(node)
-                            const isSkill = node.type === 'ultimate' || node.type === 'passive'
+                            const isSkill = node.type === 'ultimate' || node.type === 'outer' || node.type === 'passive'
                             const iconSize = isSkill ? MANIFEST_SKILL_ICON : MANIFEST_ICON
                             return (
                                 <button
                                     key={`${node.type}_${node.step}`}
                                     type="button"
-                                    aria-label={`${node.type === 'ultimate' && character.outerSkill ? '액티브' : MANIFEST_LABELS[node.type]} 발현 ${node.step}단`}
+                                    aria-label={`${MANIFEST_LABELS[node.type]} 발현 ${node.step}단`}
                                     aria-pressed={on}
                                     onClick={() => setSelected(node)}
                                     className="absolute flex flex-col items-center justify-center gap-1"
                                     style={{ left: x - MANIFEST_COL_W / 2, top: y, width: MANIFEST_COL_W, height: MANIFEST_ICON }}
                                 >
                                     <span
-                                        title={node.type === 'ultimate' && character.outerSkill ? '액티브' : MANIFEST_LABELS[node.type]}
+                                        title={MANIFEST_LABELS[node.type]}
                                         className="flex items-center justify-center overflow-hidden rounded-full transition"
                                         style={{
                                             width: iconSize, height: iconSize,
@@ -516,6 +555,7 @@ const ManifestationSection = ({ character, color }: { character: CharacterDetail
                                         />
                                     )}
                                     </span>
+                                    {isOuter && <span className="absolute top-full mt-0.5 text-[10px] text-stone-400">{node.type === 'ultimate' ? '초필살기' : MANIFEST_LABELS[node.type]}</span>}
                                 </button>
                             )
                         })}
