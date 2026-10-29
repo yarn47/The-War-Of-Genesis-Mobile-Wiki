@@ -38,6 +38,11 @@ const PORTRAIT_FRAMING: Record<string, string> = {
     '/icons/characters/irene_portrait.png': 'scale(1.11)',
     '/icons/characters/alcion_portrait.png': 'scale(1.15)',
     '/icons/characters/gishne_portrait.png': 'translateX(4%) scale(1.12)',
+    '/icons/characters/black_prince_portrait.png': 'translate(-9%, -14%) scale(1.40)',
+    '/icons/characters/ice_pandragon_portrait.png': 'scale(1.24)',
+    '/icons/characters/emilio_portrait.png': 'translateY(-8%) scale(1.95)',
+    '/icons/characters/jane_portrait.png': 'scale(1.24)',
+    '/icons/characters/christian_portrait.png': 'translateX(-8%) scale(1.24)',
 }
 
 // ─── 속성 색상 ─────────────────────────────────────────────
