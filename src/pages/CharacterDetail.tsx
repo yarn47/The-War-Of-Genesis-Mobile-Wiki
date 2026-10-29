@@ -726,9 +726,6 @@ const CharacterDetail = () => {
                             <span className="font-semibold text-base" style={{ color: color.text }}>{skill.name}</span>
                             <ElementBadge element={skill.element} />
                         </div>
-                        {index === 1 && !skill.levels.some(level => level.manifestStep === 0) && (
-                            <p className="mb-3 text-xs text-stone-400">노발현 효과는 자료 확인 중입니다.</p>
-                        )}
                         <div className="space-y-3">
                             {skill.levels.map(lvl => (
                                 <div key={lvl.manifestStep} className="rounded p-3" style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${color.border}` }}>
