@@ -7,7 +7,7 @@ export function resolveClassTreeParents<T extends TreeNode>(nodes: T[]): T[] {
     const firstTier = nodes.filter(node => node.tier === 1)
     if (firstTier.length !== 1) return nodes
     return nodes.map(node => {
-        // 카나의 스페셜리스트는 건슬링어에서 전직한다. 제인 쇼어의
+        // 카나·크리스티나의 스페셜리스트는 건슬링어에서 전직한다. 제인 쇼어의
         // 에이전트 연결처럼 트리에 기존 부모가 있으면 그대로 유지한다.
         if (node.name === '스페셜리스트' && node.tier === 3 &&
             (node.parentClassId == null || !ids.has(node.parentClassId))) {
